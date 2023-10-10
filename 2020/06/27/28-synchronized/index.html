@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh_CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Java,多线程," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="ytao's blog" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="synchronized是 Java 编程中的一个重要的关键字，也是多线程编程中不可或缺的一员。本文就对它的使用和锁的一些重要概念进行分析。 使用及原理synchronized 是一个重量级锁，它主要实现同步操作，在 Java 对象锁中有三种使用方式：  普通方法中使用，锁是当前实例对象。 静态方法中使用，锁是当前类的对象。 代码块中使用，锁是代码代码块中配置的对象。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="synchronized 原理知多少">
+<meta property="og:url" content="https://ytao.top/2020/06/27/28-synchronized/index.html">
+<meta property="og:site_name" content="ytao&#39;s blog">
+<meta property="og:description" content="synchronized是 Java 编程中的一个重要的关键字，也是多线程编程中不可或缺的一员。本文就对它的使用和锁的一些重要概念进行分析。 使用及原理synchronized 是一个重量级锁，它主要实现同步操作，在 Java 对象锁中有三种使用方式：  普通方法中使用，锁是当前实例对象。 静态方法中使用，锁是当前类的对象。 代码块中使用，锁是代码代码块中配置的对象。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://images.ytao.top/20200627225959.jpg">
+<meta property="article:published_time" content="2020-06-26T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-10-10T14:18:14.221Z">
+<meta property="article:author" content="Yang Tao">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="多线程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.ytao.top/20200627225959.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+<!-- 百度统计代码获取 -->
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?3887053ae7b22ae6e4c1ba814b74f794";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+<!-- 百度自动推送链接 -->
+<script>
+  (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      if (curProtocol === 'https') {
+          bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+      }
+      else {
+          bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+      }
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+  })();
+</script>
+
+
+
+
+  <link rel="canonical" href="https://ytao.top/2020/06/27/28-synchronized/"/>
+
+
+
+
+
+  <title>synchronized 原理知多少 | ytao's blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh_CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ytao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    <!-- 文章里设置公众号导流 -->
+    <div id="owContent">
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://ytao.top/2020/06/27/28-synchronized/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://yangtao.ytao.top/ytao-about_1.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ytao's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">synchronized 原理知多少</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-06-27T00:00:00+08:00">
+                2020-06-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-eye"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="https://images.ytao.top/20200627225959.jpg"></p>
+<p><code>synchronized</code>是 Java 编程中的一个重要的关键字，也是多线程编程中不可或缺的一员。本文就对它的使用和锁的一些重要概念进行分析。</p>
+<h1 id="使用及原理"><a href="#使用及原理" class="headerlink" title="使用及原理"></a>使用及原理</h1><p>synchronized 是一个重量级锁，它主要实现同步操作，在 Java 对象锁中有三种使用方式：</p>
+<ul>
+<li>普通方法中使用，锁是当前实例对象。</li>
+<li>静态方法中使用，锁是当前类的对象。</li>
+<li>代码块中使用，锁是代码代码块中配置的对象。</li>
+</ul>
+<span id="more"></span>
+
+<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p>在代码中使用方法分别如下：</p>
+<p>普通方法使用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 公众号：ytao</span></span><br><span class="line"><span class="comment"> * 博客：https://ytao.top</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SynchronizedMethodDemo</span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">demo</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="comment">// ......</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>静态方法使用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 公众号：ytao</span></span><br><span class="line"><span class="comment"> * 博客：https://ytao.top</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SynchronizedMethodDemo</span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">staticDemo</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="comment">// ......</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>代码块中使用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 公众号：ytao</span></span><br><span class="line"><span class="comment"> * 博客：https://ytao.top</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SynchronizedDemo</span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">demo</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="keyword">synchronized</span> (SynchronizedDemo.class)&#123;</span><br><span class="line">            <span class="comment">// ......</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h2><p>方法和代码块的实现原理使用不同方式：</p>
+<h3 id="代码块"><a href="#代码块" class="headerlink" title="代码块"></a>代码块</h3><p>每个对象都拥有一个<code>monitor</code>对象，代码块的<code>&#123;&#125;</code>中会插入<code>monitorenter</code>和<code>monitorexit</code>指令。当执行<code>monitorenter</code>指令时，会进入<code>monitor</code>对象获取锁，当执行<code>monitorexit</code>命令时，会退出<code>monitor</code>对象释放锁。同一时刻，只能有一个线程进入在<code>monitorenter</code>中。</p>
+<p>先将<code>SynchronizedDemo.java</code>使用<code>javac SynchronizedDemo.java</code>命令将其编译成<code>SynchronizedDemo.class</code>。然后使用<code>javap -c SynchronizedDemo.class</code>反编译字节码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">Compiled from <span class="string">&quot;SynchronizedDemo.java&quot;</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SynchronizedDemo</span> &#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">SynchronizedDemo</span><span class="params">()</span>;</span><br><span class="line">    Code:</span><br><span class="line">       <span class="number">0</span>: aload_0</span><br><span class="line">       <span class="number">1</span>: invokespecial #<span class="number">1</span>                  <span class="comment">// Method java/lang/Object.&quot;&lt;init&gt;&quot;:()V</span></span><br><span class="line">       <span class="number">4</span>: <span class="keyword">return</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">demo</span><span class="params">()</span>;</span><br><span class="line">    Code:</span><br><span class="line">       <span class="number">0</span>: ldc           #<span class="number">2</span>                  <span class="comment">// class SynchronizedDemo</span></span><br><span class="line">       <span class="number">2</span>: dup</span><br><span class="line">       <span class="number">3</span>: astore_1</span><br><span class="line">       <span class="number">4</span>: monitorenter  <span class="comment">// 进入 monitor</span></span><br><span class="line">       <span class="number">5</span>: aload_1</span><br><span class="line">       <span class="number">6</span>: monitorexit  <span class="comment">// 退出 monitor</span></span><br><span class="line">       <span class="number">7</span>: goto          <span class="number">15</span></span><br><span class="line">      <span class="number">10</span>: astore_2</span><br><span class="line">      <span class="number">11</span>: aload_1</span><br><span class="line">      <span class="number">12</span>: monitorexit  <span class="comment">// 退出 monitor</span></span><br><span class="line">      <span class="number">13</span>: aload_2</span><br><span class="line">      <span class="number">14</span>: athrow</span><br><span class="line">      <span class="number">15</span>: <span class="keyword">return</span></span><br><span class="line">    Exception table:</span><br><span class="line">       from    to  target type</span><br><span class="line">           <span class="number">5</span>     <span class="number">7</span>    <span class="number">10</span>   any</span><br><span class="line">          <span class="number">10</span>    <span class="number">13</span>    <span class="number">10</span>   any</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面反编码后的代码，有两个<code>monitorexit</code>指令，一个插入在异常位置，一个插入在方法结束位置。</p>
+<h3 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h3><p>方法中的<code>synchronized</code>与代码块中实现的方式不同，方法中会添加一个叫<code>ACC_SYNCHRONIZED</code>的标志，当调用方法时，首先会检查是否有<code>ACC_SYNCHRONIZED</code>标志，如果存在，则获取<code>monitor</code>对象，调用<code>monitorenter</code>和<code>monitorexit</code>指令。</p>
+<p>通过<code>javap -v -c SynchronizedMethodDemo.class</code>命令反编译<code>SynchronizedMethodDemo</code>类。<code>-v</code>参数即<code>-verbose</code>，表示输出反编译的附加信息。下面以反编译普通方法为例。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line">Classfile /E:/SynchronizedMethodDemo.<span class="keyword">class</span></span><br><span class="line">  <span class="title class_">Last</span> modified <span class="number">2020</span>-<span class="number">6</span>-<span class="number">28</span>; size <span class="number">381</span> bytes</span><br><span class="line">  MD5 checksum 55ca2bbd9b6939bbd515c3ad9e59d10c</span><br><span class="line">  Compiled from <span class="string">&quot;SynchronizedMethodDemo.java&quot;</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">SynchronizedMethodDemo</span></span><br><span class="line">  minor version: <span class="number">0</span></span><br><span class="line">  major version: <span class="number">52</span></span><br><span class="line">  flags: ACC_PUBLIC, ACC_SUPER</span><br><span class="line">Constant pool:</span><br><span class="line">   #<span class="number">1</span> = Methodref          #<span class="number">5.</span>#<span class="number">13</span>         <span class="comment">// java/lang/Object.&quot;&lt;init&gt;&quot;:()V</span></span><br><span class="line">   #<span class="number">2</span> = Fieldref           #<span class="number">14.</span>#<span class="number">15</span>        <span class="comment">// java/lang/System.out:Ljava/io/PrintStream;</span></span><br><span class="line">   #<span class="number">3</span> = Methodref          #<span class="number">16.</span>#<span class="number">17</span>        <span class="comment">// java/io/PrintStream.println:()V</span></span><br><span class="line">   #<span class="number">4</span> = Class              #<span class="number">18</span>            <span class="comment">// SynchronizedMethodDemo</span></span><br><span class="line">   #<span class="number">5</span> = Class              #<span class="number">19</span>            <span class="comment">// java/lang/Object</span></span><br><span class="line">   #<span class="number">6</span> = Utf8               &lt;init&gt;</span><br><span class="line">   #<span class="number">7</span> = Utf8               ()V</span><br><span class="line">   #<span class="number">8</span> = Utf8               Code</span><br><span class="line">   #<span class="number">9</span> = Utf8               LineNumberTable</span><br><span class="line">  #<span class="number">10</span> = Utf8               demo</span><br><span class="line">  #<span class="number">11</span> = Utf8               SourceFile</span><br><span class="line">  #<span class="number">12</span> = Utf8               SynchronizedMethodDemo.java</span><br><span class="line">  #<span class="number">13</span> = NameAndType        #<span class="number">6</span>:#<span class="number">7</span>          <span class="comment">// &quot;&lt;init&gt;&quot;:()V</span></span><br><span class="line">  #<span class="number">14</span> = Class              #<span class="number">20</span>            <span class="comment">// java/lang/System</span></span><br><span class="line">  #<span class="number">15</span> = NameAndType        #<span class="number">21</span>:#<span class="number">22</span>        <span class="comment">// out:Ljava/io/PrintStream;</span></span><br><span class="line">  #<span class="number">16</span> = Class              #<span class="number">23</span>            <span class="comment">// java/io/PrintStream</span></span><br><span class="line">  #<span class="number">17</span> = NameAndType        #<span class="number">24</span>:#<span class="number">7</span>         <span class="comment">// println:()V</span></span><br><span class="line">  #<span class="number">18</span> = Utf8               SynchronizedMethodDemo</span><br><span class="line">  #<span class="number">19</span> = Utf8               java/lang/Object</span><br><span class="line">  #<span class="number">20</span> = Utf8               java/lang/System</span><br><span class="line">  #<span class="number">21</span> = Utf8               out</span><br><span class="line">  #<span class="number">22</span> = Utf8               Ljava/io/PrintStream;</span><br><span class="line">  #<span class="number">23</span> = Utf8               java/io/PrintStream</span><br><span class="line">  #<span class="number">24</span> = Utf8               println</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="title function_">SynchronizedMethodDemo</span><span class="params">()</span>;</span><br><span class="line">    descriptor: ()V</span><br><span class="line">    flags: ACC_PUBLIC</span><br><span class="line">    Code:</span><br><span class="line">      stack=<span class="number">1</span>, locals=<span class="number">1</span>, args_size=<span class="number">1</span></span><br><span class="line">         <span class="number">0</span>: aload_0</span><br><span class="line">         <span class="number">1</span>: invokespecial #<span class="number">1</span>                  <span class="comment">// Method java/lang/Object.&quot;&lt;init&gt;&quot;:()V</span></span><br><span class="line">         <span class="number">4</span>: <span class="keyword">return</span></span><br><span class="line">      LineNumberTable:</span><br><span class="line">        line <span class="number">5</span>: <span class="number">0</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">demo</span><span class="params">()</span>;</span><br><span class="line">    descriptor: ()V</span><br><span class="line">    flags: ACC_PUBLIC, ACC_SYNCHRONIZED     <span class="comment">// ACC_SYNCHRONIZED 标志</span></span><br><span class="line">    Code:</span><br><span class="line">      stack=<span class="number">1</span>, locals=<span class="number">1</span>, args_size=<span class="number">1</span></span><br><span class="line">         <span class="number">0</span>: getstatic     #<span class="number">2</span>                  <span class="comment">// Field java/lang/System.out:Ljava/io/PrintStream;</span></span><br><span class="line">         <span class="number">3</span>: invokevirtual #<span class="number">3</span>                  <span class="comment">// Method java/io/PrintStream.println:()V</span></span><br><span class="line">         <span class="number">6</span>: <span class="keyword">return</span></span><br><span class="line">      LineNumberTable:</span><br><span class="line">        line <span class="number">8</span>: <span class="number">0</span></span><br><span class="line">        line <span class="number">10</span>: <span class="number">6</span></span><br><span class="line">&#125;</span><br><span class="line">SourceFile: <span class="string">&quot;SynchronizedMethodDemo.java&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>上面对代码块和方法的实现方式进行探究：</p>
+<ul>
+<li>代码块通过在编译后的代码中添加<code>monitorenter</code>和<code>monitorexit</code>指令。</li>
+<li>方法中通过添加<code>ACC_SYNCHRONIZED</code>标志，来决定是否调用<code>monitor</code>对象。</li>
+</ul>
+<h1 id="Java-对象头"><a href="#Java-对象头" class="headerlink" title="Java 对象头"></a>Java 对象头</h1><p><code>synchronized</code>锁的相关数据存放在 Java 对象头中。Java 对象头指的 HotSpot 虚拟机的对象头，使用2个字宽或3个字宽存储对象头。</p>
+<ul>
+<li>第一部分存储运行时的数据，hashCode、锁标记位、是否偏向锁、GC分代年龄等等信息，称作为<code>Mark Word</code>。</li>
+<li>第二部分存储对象类型数据的指针。</li>
+<li>第三部分，如果对象是数组的话，则用这部分来存储数组长度。</li>
+</ul>
+<p>Java 对象头 Mark Word 存储内容：</p>
+<table>
+<thead>
+<tr>
+<th align="center">存储内容</th>
+<th align="center">标志位</th>
+<th align="center">状态</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">对象的hashCode、GC分代年龄</td>
+<td align="center">01</td>
+<td align="center">无锁</td>
+</tr>
+<tr>
+<td align="center">指向栈中锁记录的指针</td>
+<td align="center">00</td>
+<td align="center">轻量级锁</td>
+</tr>
+<tr>
+<td align="center">指向重量级锁的指针</td>
+<td align="center">10</td>
+<td align="center">重量级锁</td>
+</tr>
+<tr>
+<td align="center">空</td>
+<td align="center">11</td>
+<td align="center">GC标记</td>
+</tr>
+<tr>
+<td align="center">线程ID、Epoch（一个时间戳）、GC分代年龄</td>
+<td align="center">01</td>
+<td align="center">偏向锁</td>
+</tr>
+</tbody></table>
+<h1 id="锁升级"><a href="#锁升级" class="headerlink" title="锁升级"></a>锁升级</h1><p>synchronized 称为重量级锁，但 Java SE 1.6 为优化该锁的性能而减少获取和释放锁的性能消耗，引入<code>偏向锁</code>和<code>轻量级锁</code>。</p>
+<p>锁的高低级别为：<code>无锁</code>→<code>偏向锁</code>→<code>轻量级锁</code>→<code>重量级锁</code>。</p>
+<p>其中锁的升级是不可逆的，只能由低往高级别升，不能由高往低降。</p>
+<h2 id="偏向锁"><a href="#偏向锁" class="headerlink" title="偏向锁"></a>偏向锁</h2><p>偏向锁是优化在无多线程竞争情况下，提高程序的的运行性能而使用到的锁。在<code>Mark Word</code>中存储一个值，用来标志是否为偏向锁，在 32 位虚拟机和 64 位虚拟机中都是使用一个字节存储，0 为非偏向锁，1 为是偏向锁。</p>
+<p>当第一次被线程获取偏向锁时，会将<code>Mark Word</code>中的偏向锁标志设置为 1，同时使用 CAS 操作来记录这个线程的ID。获取到偏向锁的线程，再次进入获取锁时，只需判断<code>Mark Word</code>是否存储着当前线程ID，如果是，则不需再次进行获取锁操作，而是直接持有该锁。</p>
+<h3 id="撤销锁"><a href="#撤销锁" class="headerlink" title="撤销锁"></a>撤销锁</h3><p>如果有其他线程出现，尝试获取偏向锁，让偏向锁处于竞争状态，那么当前偏向锁就会撤销。<br>撤销偏向锁时，首先会暂停持有偏向锁的线程，并将线程ID设为空，然后检查该线程是否存活：</p>
+<ul>
+<li>当暂停线程非存活，则设置对象头为无锁状态。</li>
+<li>当暂停线程存活，执行偏向锁的栈，最后对象头的保存其他获取到偏向锁的线程ID或者转向无锁状态。</li>
+</ul>
+<p><strong>当确定代码一定执行在多线程访问中时，那么这时的偏向锁是无法发挥到优势，如果继续使用偏向锁就显得过于累赘，给系统带来不必要的性能开销，此时可以设置 JVM 参数<code>-XX:BiasedLocking=false</code>来关闭偏向锁。</strong></p>
+<h2 id="轻量级锁"><a href="#轻量级锁" class="headerlink" title="轻量级锁"></a>轻量级锁</h2><p>代码进入同步块的时候，如果对象头不是锁定状态，JVM 则会在当前线程的栈桢中创建一个<code>锁记录</code>的空间，将锁对象头的<code>Mark Word</code>复制一份到<code>锁记录</code>中，这份复制过来的<code>Mark Word</code>叫做<code>Displaced Mark Word</code>。然后使用 CAS 操作将锁对象头中的<code>Mark Word</code>更新为指向<code>锁记录</code>的指针。如果更新成功，当前线程则会获得锁，如果失败，JVM 先检查锁对象的<code>Mark Word</code>是否指向当前线程，是指向当前线程的话，则当前线程已持有锁，否则存在多线程竞争，当前线程会通过自旋获取锁，这里的自旋可以理解为循环尝试获取锁，所以这过程是消耗 CPU 的过程。当轻量级锁存在竞争状态并自旋获取轻量级锁失败时，轻量级锁就会膨胀为重量级锁，锁对象的<code>Mark Word</code>会更新为指向重量级锁的指针，等待获取锁的线程进入阻塞状态。</p>
+<h3 id="解锁"><a href="#解锁" class="headerlink" title="解锁"></a>解锁</h3><p>轻量级锁解锁是使用 CAS 操作将<code>锁记录</code>替换到<code>Mark Word</code>中，如果替换成功，则表示同步操作已完成。如果失败，则表示其他竞争线程尝试过获取该轻量级锁，需要在释放锁的同时，去唤醒其他被阻塞的线程，被唤醒的线程回去再次去竞争锁。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><blockquote>
+<p>通过分析<code>synchronized</code>的使用以及 Java SE 1.6 升级优化锁后的设计，可以看出其主要是解决是通过多加入两级相对更轻巧的偏向锁和轻量级锁来优化重量级锁的性能消耗，但是这并不是一定会起到优化作用，主要是解决大多数情况下不存在多线程竞争以及同一线程多次获取锁的的优化，这也是根据平时在编码中多观察多反思得出的权衡方案。</p>
+</blockquote>
+<p><strong>推荐阅读</strong></p>
+<p><a href="https://ytao.top/2020/03/15/18-volatile/">《volatile 手摸手带你解析》</a></p>
+<p><a href="https://ytao.top/2020/05/12/24-thread-wait-notify/">《Java 线程通信之 wait&#x2F;notify 机制》</a></p>
+<p><a href="https://ytao.top/2020/05/17/25-thread-count/">《Java 多线程中使用 JDK 自带工具类实现计数器》</a></p>
+<p><a href="https://ytao.top/2020/04/19/22-thread-base/">《Java 线程基础，从这篇开始》</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+      <div>
+        <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://yangtao.ytao.top/ytao%E5%85%AC%E4%BC%97%E5%8F%B7.jpg" alt=" wechat" style="width: 200px; max-width: 100%;"/>
+    <div>我的公众号</div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>原创技术分享，感谢您的鼓励！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span><!-- Donate -->赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="https://yangtao.ytao.top/wechatpay.png" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="https://yangtao.ytao.top/alipay.jpg" alt=" Alipay"/>
+        <p>Alipay</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Java/" rel="tag"># Java</a>
+          
+            <a href="/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag"># 多线程</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/06/14/27-mongodb-query/" rel="next" title="MongoDB 常用查询操作">
+                <i class="fa fa-chevron-left"></i> MongoDB 常用查询操作
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/08/25/29-AQS/" rel="prev" title="AQS 原理剖析">
+                AQS 原理剖析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+          <div class="post-spread">
+            
+          </div>
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="https://yangtao.ytao.top/ytao-about_1.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name">
+               
+              <!-- 
+              <br>
+              杨&nbsp;滔 
+              -->
+              <br>
+              原创技术博客
+              </p>
+              <p class="site-description motion-element" itemprop="description">
+              路漫漫其修远兮，吾将上下而求索
+              <!-- 
+              
+              -->
+              </p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="/links/" target="_blank" title="Links">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Links</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%8E%9F%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">使用及原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-number">1.1.</span> <span class="nav-text">使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86"><span class="nav-number">1.2.</span> <span class="nav-text">实现原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E5%9D%97"><span class="nav-number">1.2.1.</span> <span class="nav-text">代码块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%B3%95"><span class="nav-number">1.2.2.</span> <span class="nav-text">方法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Java-%E5%AF%B9%E8%B1%A1%E5%A4%B4"><span class="nav-number">2.</span> <span class="nav-text">Java 对象头</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%94%81%E5%8D%87%E7%BA%A7"><span class="nav-number">3.</span> <span class="nav-text">锁升级</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%81%8F%E5%90%91%E9%94%81"><span class="nav-number">3.1.</span> <span class="nav-text">偏向锁</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%92%A4%E9%94%80%E9%94%81"><span class="nav-number">3.1.1.</span> <span class="nav-text">撤销锁</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BD%BB%E9%87%8F%E7%BA%A7%E9%94%81"><span class="nav-number">3.2.</span> <span class="nav-text">轻量级锁</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E9%94%81"><span class="nav-number">3.2.1.</span> <span class="nav-text">解锁</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yang Tao</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+<!-- 访问统计 -->
+
+    <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span id="busuanzi_container_site_pv">本站总访问量<span id="busuanzi_value_site_pv"></span>次</span>
+    <span class="post-meta-divider">|</span>
+    <span id="busuanzi_container_site_uv">本站访客数<span id="busuanzi_value_site_uv"></span>人</span>
+
+
+<!-- 备案号 -->
+<p>
+	<a class="beian" style="font-size:12px; color:gray; border-bottom: none;" href="https://beian.miit.gov.cn" target="_blank">
+    粤ICP备19117800号
+	</a>
+</p>
+
+
+<script src="https://my.openwrite.cn/js/readmore.js" type="text/javascript"></script>
+<script>
+    const btw = new BTWPlugin();
+    btw.init({
+        id: 'owContent',
+        blogId: '15390-1575515911767-844',
+        name: '『ytao』',
+        qrcode: 'http://yangtao.ytao.top/ytao%E5%85%AC%E4%BC%97%E5%8F%B7.jpg',
+        keyword: 'ytao',
+    });
+</script>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+  <script type="text/javascript" src="/js/src/exturl.js?v=5.1.4"></script>
+
+
+</body>
+</html>

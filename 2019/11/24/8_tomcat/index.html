@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh_CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Tomcat,应用服务器," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="ytao's blog" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="Tomcat 作为 servlet 容器实现，它是基于 Java 语言开发的轻量级应用服务器。因为 Tomcat 作为应用服务器，它有着完全开源，轻量，性能稳定，部署成本低等优点，所以它成为目前 Java 开发应用部署的首选，几乎每个Java Web开发者都有使用过，但是，你对 Tomcat 的整体设计有进行过了解和思考吗？">
+<meta property="og:type" content="article">
+<meta property="og:title" content="初探Tomcat的架构设计">
+<meta property="og:url" content="https://ytao.top/2019/11/24/8_tomcat/index.html">
+<meta property="og:site_name" content="ytao&#39;s blog">
+<meta property="og:description" content="Tomcat 作为 servlet 容器实现，它是基于 Java 语言开发的轻量级应用服务器。因为 Tomcat 作为应用服务器，它有着完全开源，轻量，性能稳定，部署成本低等优点，所以它成为目前 Java 开发应用部署的首选，几乎每个Java Web开发者都有使用过，但是，你对 Tomcat 的整体设计有进行过了解和思考吗？">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://images.ytao.top/tomcat.jpg">
+<meta property="og:image" content="https://images.ytao.top/tomcat.png">
+<meta property="og:image" content="https://images.ytao.top/tomcat-lifecycle.png">
+<meta property="og:image" content="https://images.ytao.top/tomcat-server.png">
+<meta property="og:image" content="https://images.ytao.top/tomcat-server-config.png">
+<meta property="og:image" content="https://images.ytao.top/tomcat-service.png">
+<meta property="og:image" content="https://images.ytao.top/tomcat-engine.png">
+<meta property="article:published_time" content="2019-11-23T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-10-10T14:18:14.221Z">
+<meta property="article:author" content="Yang Tao">
+<meta property="article:tag" content="Tomcat">
+<meta property="article:tag" content="应用服务器">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.ytao.top/tomcat.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+<!-- 百度统计代码获取 -->
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?3887053ae7b22ae6e4c1ba814b74f794";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+<!-- 百度自动推送链接 -->
+<script>
+  (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      if (curProtocol === 'https') {
+          bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+      }
+      else {
+          bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+      }
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+  })();
+</script>
+
+
+
+
+  <link rel="canonical" href="https://ytao.top/2019/11/24/8_tomcat/"/>
+
+
+
+
+
+  <title>初探Tomcat的架构设计 | ytao's blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh_CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ytao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    <!-- 文章里设置公众号导流 -->
+    <div id="owContent">
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://ytao.top/2019/11/24/8_tomcat/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://yangtao.ytao.top/ytao-about_1.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ytao's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">初探Tomcat的架构设计</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-11-24T00:00:00+08:00">
+                2019-11-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Tomcat/" itemprop="url" rel="index">
+                    <span itemprop="name">Tomcat</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-eye"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="https://images.ytao.top/tomcat.jpg"></p>
+<blockquote>
+<p>Tomcat 作为 servlet 容器实现，它是基于 Java 语言开发的轻量级应用服务器。因为 Tomcat 作为应用服务器，它有着完全开源，轻量，性能稳定，部署成本低等优点，所以它成为目前 Java 开发应用部署的首选，几乎每个Java Web开发者都有使用过，但是，你对 Tomcat 的整体设计有进行过了解和思考吗？</p>
+</blockquote>
+<span id="more"></span>
+
+<p><strong>本文将基于 Tomcat8 进行分析，具体版本为 Tomcat8 当前官网最新修改(2019-11-21 09:28)的版本 <code>v8.5.49</code></strong></p>
+<h1 id="总体结构"><a href="#总体结构" class="headerlink" title="总体结构"></a>总体结构</h1><p>Tomcat 的总体结构中有很多模块，下图列出我们将要进行分析结构中的主要模块。其中主要分析的是Service，Connector，Engine，Host，Context，Wrapper。为避免图层看着太乱，下图中<code>n</code>代表该组件可允许存在多个。</p>
+<p><img src="https://images.ytao.top/tomcat.png"></p>
+<p>如上图所描述的是：Server 是 tomcat 服务器，在 Server 中可以存在多个服务 Service 。每个服务中可有多个连接器和一个 Servlet 引擎 Engine，一个 Service 中多个连接器对应一个 Engine。 每个 Engine 中，可存在多个域名，这里可用虚拟主机的概念来表示 Host。每个 Host 中可以存在多个应用 Context。<br>Server，Service，Connector，Engine，Host，Context，Wrapper 它们之间的关系，除了Connector和Engine，它们是平行关系，其它的都是存在包含关系。同时，它们也都继承了 Lifecycle 接口，该接口提供的是生命周期的管理，里面包括：**初始化（init），启动（start），停止(stop)，销毁(destroy)**。当它的父容器启动时，会调用它子容器的启动，停止也是一样的。</p>
+<p><img src="https://images.ytao.top/tomcat-lifecycle.png"></p>
+<p>上图中，还可以看到，Engine，Host，Context，Wrapper 都继承自 Container。它有个<code>backgroundProcess()</code>方法，后台异步处理，所以继承它后可以方便的创建异步线程。<br>在 Tomcat7 中，有看到 Service 持有的是 Container，而不是 Engine。估计这也是为什么在当前版本中添加 Engine 方法名叫<code>setContainer</code>。</p>
+<h1 id="Server"><a href="#Server" class="headerlink" title="Server"></a>Server</h1><p>Tomcat 源码中有提供<code>org.apache.catalina.Server</code>接口，对应的默认实现类为<code>org.apache.catalina.core.StandardServer</code>，接口里面提供有如下图方法。</p>
+<p><img src="https://images.ytao.top/tomcat-server.png"></p>
+<p>上图中可以知道 Server 做的工作：对 Service，Address，Port，Catalina 以及全局命名资源的管理操作。<br>Server 在进行初始化的时候，会加载我们 server.xml 中配置的数据。</p>
+<p><img src="https://images.ytao.top/tomcat-server-config.png"></p>
+<p>这里对其中的 Service 操作的<code>addService</code>向定义的服务集添加新服务进行分析：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 保存服务的服务集</span></span><br><span class="line"><span class="keyword">private</span> Service services[] = <span class="keyword">new</span> <span class="title class_">Service</span>[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line"><span class="keyword">final</span> <span class="type">PropertyChangeSupport</span> <span class="variable">support</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PropertyChangeSupport</span>(<span class="built_in">this</span>);</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addService</span><span class="params">(Service service)</span> &#123;</span><br><span class="line">    <span class="comment">// 相互关联</span></span><br><span class="line">    service.setServer(<span class="built_in">this</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 利用同步锁，防止并发访问   来源：https://ytao.top</span></span><br><span class="line">    <span class="keyword">synchronized</span> (servicesLock) &#123;</span><br><span class="line">        Service results[] = <span class="keyword">new</span> <span class="title class_">Service</span>[services.length + <span class="number">1</span>];</span><br><span class="line">        <span class="comment">// copy 旧的服务到新的数组中</span></span><br><span class="line">        System.arraycopy(services, <span class="number">0</span>, results, <span class="number">0</span>, services.length);</span><br><span class="line">        <span class="comment">// 添加新的 service</span></span><br><span class="line">        results[services.length] = service;</span><br><span class="line">        services = results;</span><br><span class="line">    </span><br><span class="line">        <span class="comment">// 如果当前 server 已经启动，那么当前添加的 service 就开始启动</span></span><br><span class="line">        <span class="keyword">if</span> (getState().isAvailable()) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                service.start();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (LifecycleException e) &#123;</span><br><span class="line">                <span class="comment">// Ignore</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 使用观察者模式，当被监听对象属性值发生变化时通知监听器，remove 是也会调用。</span></span><br><span class="line">        support.firePropertyChange(<span class="string">&quot;service&quot;</span>, <span class="literal">null</span>, service);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>源码中可以看到，向服务器中添加服务后，随机会启动服务，实则也服务启动入口。</p>
+<h1 id="Service"><a href="#Service" class="headerlink" title="Service"></a>Service</h1><p>Service 的主要职责就是将 Connector 和 Engine 的组装在一起。两者分开的目的也就是使请求监听和请求处理进行解耦，能拥有更好的扩展性。每个 Service 都是相互独立的，但是共享一个JVM和系统类库。这里提供了<code>org.apache.catalina.Service</code>接口和默认实现类<code>org.apache.catalina.coreStandardService</code>。</p>
+<p><img src="https://images.ytao.top/tomcat-service.png"></p>
+<p>在实现类 StandardService 中，主要分析<code>setContainer</code>和<code>addConnector</code>两个方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="type">Engine</span> <span class="variable">engine</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">final</span> <span class="type">MapperListener</span> <span class="variable">mapperListener</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">MapperListener</span>(<span class="built_in">this</span>);</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setContainer</span><span class="params">(Engine engine)</span> &#123;</span><br><span class="line">    <span class="type">Engine</span> <span class="variable">oldEngine</span> <span class="operator">=</span> <span class="built_in">this</span>.engine;</span><br><span class="line">    <span class="comment">// 判断当前 Service 是否有关联 Engine</span></span><br><span class="line">    <span class="keyword">if</span> (oldEngine != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="comment">// 如果当前 Service 有关联 Engine，就去掉当前关联的 Engine</span></span><br><span class="line">        oldEngine.setService(<span class="literal">null</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 如果当前新的 Engine 不为空，那么 Engine 关联当前 Service，这里是个双向关联</span></span><br><span class="line">    <span class="built_in">this</span>.engine = engine;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.engine != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="built_in">this</span>.engine.setService(<span class="built_in">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 如果当前 Service 启动了，那么就开始启动当前新的 Engine</span></span><br><span class="line">    <span class="keyword">if</span> (getState().isAvailable()) &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">this</span>.engine != <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="built_in">this</span>.engine.start();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (LifecycleException e) &#123;</span><br><span class="line">                log.error(sm.getString(<span class="string">&quot;standardService.engine.startFailed&quot;</span>), e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 重启 MapperListener ，获取一个新的 Engine ，一定是当前入参的 Engine</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            mapperListener.stop();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (LifecycleException e) &#123;</span><br><span class="line">            log.error(sm.getString(<span class="string">&quot;standardService.mapperListener.stopFailed&quot;</span>), e);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            mapperListener.start();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (LifecycleException e) &#123;</span><br><span class="line">            log.error(sm.getString(<span class="string">&quot;standardService.mapperListener.startFailed&quot;</span>), e);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 如果当前 Service 之前有 Engine 关联，那么停止之前的 Engine</span></span><br><span class="line">        <span class="keyword">if</span> (oldEngine != <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                oldEngine.stop();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (LifecycleException e) &#123;</span><br><span class="line">                log.error(sm.getString(<span class="string">&quot;standardService.engine.stopFailed&quot;</span>), e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Report this property change to interested listeners</span></span><br><span class="line">    support.firePropertyChange(<span class="string">&quot;container&quot;</span>, oldEngine, <span class="built_in">this</span>.engine);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 实现方式和 StandardServer#addService 类似，不在细述</span></span><br><span class="line"><span class="comment">* 注意，Connector 这里没有像 Engine 一样与 Service 实现双向关联</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addConnector</span><span class="params">(Connector connector)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">synchronized</span> (connectorsLock) &#123;</span><br><span class="line">        connector.setService(<span class="built_in">this</span>);</span><br><span class="line">        Connector results[] = <span class="keyword">new</span> <span class="title class_">Connector</span>[connectors.length + <span class="number">1</span>];</span><br><span class="line">        System.arraycopy(connectors, <span class="number">0</span>, results, <span class="number">0</span>, connectors.length);</span><br><span class="line">        results[connectors.length] = connector;</span><br><span class="line">        connectors = results;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (getState().isAvailable()) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                connector.start();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (LifecycleException e) &#123;</span><br><span class="line">                log.error(sm.getString(</span><br><span class="line">                        <span class="string">&quot;standardService.connector.startFailed&quot;</span>,</span><br><span class="line">                        connector), e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Report this property change to interested listeners</span></span><br><span class="line">        support.firePropertyChange(<span class="string">&quot;connector&quot;</span>, <span class="literal">null</span>, connector);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h1 id="Connector"><a href="#Connector" class="headerlink" title="Connector"></a>Connector</h1><p>Connector 主要用于接收请求，然后交给 Engine 处理请求，处理完后再给 Connector 去返回给客户端。当前使用版本支持的协议有：HTTP，HHTP&#x2F;2，AJP，NIO，NIO2，APR<br>主要的功能包括：</p>
+<ul>
+<li>监听服务器端口来读取客户端的请求。</li>
+<li>解析协议并交给对应的容器处理请求。</li>
+<li>返回处理后的信息给客户端</li>
+</ul>
+<p>Connector 对应服务器 server.xml 中配置信息的例子：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">Connector</span> <span class="attr">port</span>=<span class="string">&quot;8080&quot;</span> <span class="attr">protocol</span>=<span class="string">&quot;HTTP/1.1&quot;</span></span></span><br><span class="line"><span class="tag">               <span class="attr">connectionTimeout</span>=<span class="string">&quot;20000&quot;</span></span></span><br><span class="line"><span class="tag">               <span class="attr">redirectPort</span>=<span class="string">&quot;8443&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这里通过配置监听的端口号<code>port</code>，指定处理协议<code>protocol</code>，以及重定向地址<code>redirectPort</code>。<br>协议处理类型通过实例化连接器时设置：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="title function_">Connector</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="comment">// 无参构造，下面 setProtocol 中默认使用HTTP/1.1</span></span><br><span class="line">    <span class="built_in">this</span>(<span class="literal">null</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="title function_">Connector</span><span class="params">(String protocol)</span> &#123;</span><br><span class="line">    <span class="comment">// 设置当前连接器协议处理类型</span></span><br><span class="line">    setProtocol(protocol);</span><br><span class="line">    <span class="comment">// 实例化协议处理器，并保存到当前 Connector 中</span></span><br><span class="line">    <span class="type">ProtocolHandler</span> <span class="variable">p</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        Class&lt;?&gt; clazz = Class.forName(protocolHandlerClassName);</span><br><span class="line">        p = (ProtocolHandler) clazz.getConstructor().newInstance();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        log.error(sm.getString(</span><br><span class="line">                <span class="string">&quot;coyoteConnector.protocolHandlerInstantiationFailed&quot;</span>), e);</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.protocolHandler = p;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (Globals.STRICT_SERVLET_COMPLIANCE) &#123;</span><br><span class="line">        uriCharset = StandardCharsets.ISO_8859_1;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        uriCharset = StandardCharsets.UTF_8;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* 这个设置再 tomcat9 中被移除，改为必配项</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setProtocol</span><span class="params">(String protocol)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">boolean</span> <span class="variable">aprConnector</span> <span class="operator">=</span> AprLifecycleListener.isAprAvailable() &amp;&amp;</span><br><span class="line">            AprLifecycleListener.getUseAprConnector();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 这里指定了默认协议和 HTTP/1.1 一样</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="string">&quot;HTTP/1.1&quot;</span>.equals(protocol) || protocol == <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (aprConnector) &#123;</span><br><span class="line">            setProtocolHandlerClassName(<span class="string">&quot;org.apache.coyote.http11.Http11AprProtocol&quot;</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            setProtocolHandlerClassName(<span class="string">&quot;org.apache.coyote.http11.Http11NioProtocol&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="string">&quot;AJP/1.3&quot;</span>.equals(protocol)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (aprConnector) &#123;</span><br><span class="line">            setProtocolHandlerClassName(<span class="string">&quot;org.apache.coyote.ajp.AjpAprProtocol&quot;</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            setProtocolHandlerClassName(<span class="string">&quot;org.apache.coyote.ajp.AjpNioProtocol&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 最后如果不是通过指定 HTTP/1.1，AJP/1.3 类型的协议，就通过类名实例化一个协议处理器</span></span><br><span class="line">        setProtocolHandlerClassName(protocol);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>ProtocolHandler 是一个协议处理器，针对不同的请求，提供不同实现。实现类 AbstractProtocol 在初始化时，会在最后调用一个抽象类 AbstractEndpoint 初始化来启动线程来监听服务器端口，当接收到请求后，调用 Processor 读取请求，然后交给 Engine 处理请求。</p>
+<h1 id="Engine"><a href="#Engine" class="headerlink" title="Engine"></a>Engine</h1><p>Engine 对应的是，<code>org.apache.catalina.Engine</code>接口和<code>org.apache.catalina.core.StandardEngine</code>默认实现类。<br>Engine 的功能也比较简单，处理容器关系的关联。</p>
+<p><img src="https://images.ytao.top/tomcat-engine.png"></p>
+<p>但是实现类中的<code>addChild()</code>不是指的子 Engine，而是只能是 Host。同时没有父容器，<code>setParent</code>是不允许操作设置的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addChild</span><span class="params">(Container child)</span> &#123;</span><br><span class="line">    <span class="comment">// 添加的子容器必须是 Host </span></span><br><span class="line">    <span class="keyword">if</span> (!(child <span class="keyword">instanceof</span> Host))</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span></span><br><span class="line">            (sm.getString(<span class="string">&quot;standardEngine.notHost&quot;</span>));</span><br><span class="line">    <span class="built_in">super</span>.addChild(child);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setParent</span><span class="params">(Container container)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span></span><br><span class="line">        (sm.getString(<span class="string">&quot;standardEngine.notParent&quot;</span>));</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>server.xml 可以配置我们的数据：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 配置默认Host，及jvmRoute --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">Engine</span> <span class="attr">name</span>=<span class="string">&quot;Catalina&quot;</span> <span class="attr">defaultHost</span>=<span class="string">&quot;localhost&quot;</span> <span class="attr">jvmRoute</span>=<span class="string">&quot;jvm1&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="Host"><a href="#Host" class="headerlink" title="Host"></a>Host</h1><p>Host 表示一个虚拟主机。应为我们的服务器可设置多个域名，比如 demo.ytao.top，dev.ytao.top。那么我们就要设置两个不同 Host 来处理不同域名的请求。当过来的请求域名为 demo.ytao.top 时，那么它就会去找该域名 Host 下的 Context。<br>所以我们的 server.xml 配置文件也提供该配置：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- name 设置的时虚拟主机域名 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">Host</span> <span class="attr">name</span>=<span class="string">&quot;localhost&quot;</span>  <span class="attr">appBase</span>=<span class="string">&quot;webapps&quot;</span></span></span><br><span class="line"><span class="tag">            <span class="attr">unpackWARs</span>=<span class="string">&quot;true&quot;</span> <span class="attr">autoDeploy</span>=<span class="string">&quot;true&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="Context"><a href="#Context" class="headerlink" title="Context"></a>Context</h1><p>到 Context 这里来，就拥有 Servlet 的运行环境，Engine，Host都是主要维护容器关系，不具备运行环境。<br>我们暂且可将 Context 理解为一个应用，例如我们在根目录下有 ytao-demo-1 和 ytao-demo-2 两个应用，那么这里就是有两个 Context。<br>这里主要介绍的<code>addChild</code>方法，该添加的子容器是 Wrapper:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addChild</span><span class="params">(Container child)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Global JspServlet</span></span><br><span class="line">    <span class="type">Wrapper</span> <span class="variable">oldJspServlet</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 这里添加的子容器只能时 Wrapper</span></span><br><span class="line">    <span class="keyword">if</span> (!(child <span class="keyword">instanceof</span> Wrapper)) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span></span><br><span class="line">            (sm.getString(<span class="string">&quot;standardContext.notWrapper&quot;</span>));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 判断子容器 Wrapper 是否为 JspServlet</span></span><br><span class="line">    <span class="type">boolean</span> <span class="variable">isJspServlet</span> <span class="operator">=</span> <span class="string">&quot;jsp&quot;</span>.equals(child.getName());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Allow webapp to override JspServlet inherited from global web.xml.</span></span><br><span class="line">    <span class="keyword">if</span> (isJspServlet) &#123;</span><br><span class="line">        oldJspServlet = (Wrapper) findChild(<span class="string">&quot;jsp&quot;</span>);</span><br><span class="line">        <span class="keyword">if</span> (oldJspServlet != <span class="literal">null</span>) &#123;</span><br><span class="line">            removeChild(oldJspServlet);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">super</span>.addChild(child);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将servlet映射添加到Context组件</span></span><br><span class="line">    <span class="keyword">if</span> (isJspServlet &amp;&amp; oldJspServlet != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * The webapp-specific JspServlet inherits all the mappings</span></span><br><span class="line"><span class="comment">         * specified in the global web.xml, and may add additional ones.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        String[] jspMappings = oldJspServlet.findMappings();</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> i=<span class="number">0</span>; jspMappings!=<span class="literal">null</span> &amp;&amp; i&lt;jspMappings.length; i++) &#123;</span><br><span class="line">            addServletMappingDecoded(jspMappings[i], child.getName());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里也就是每个应用中的 Servlet 管理中心。</p>
+<h1 id="Wrapper"><a href="#Wrapper" class="headerlink" title="Wrapper"></a>Wrapper</h1><p>Wrapper 是一个 Servlet 的管理中心，它拥有 Servlet 的整个生命周期，它是没有子容器的，因为它自己就是最底层的容器了。<br>这里主要对 Servlet 加载的分析：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> Servlet <span class="title function_">loadServlet</span><span class="params">()</span> <span class="keyword">throws</span> ServletException &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果已经实例化或者用实例化池，就直接返回</span></span><br><span class="line">    <span class="keyword">if</span> (!singleThreadModel &amp;&amp; (instance != <span class="literal">null</span>))</span><br><span class="line">        <span class="keyword">return</span> instance;</span><br><span class="line"></span><br><span class="line">    <span class="type">PrintStream</span> <span class="variable">out</span> <span class="operator">=</span> System.out;</span><br><span class="line">    <span class="keyword">if</span> (swallowOutput) &#123;</span><br><span class="line">        SystemLogHandler.startCapture();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Servlet servlet;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">long</span> t1=System.currentTimeMillis();</span><br><span class="line">        <span class="comment">// 如果 servlet 类名为空，直接抛出 Servlet 异常</span></span><br><span class="line">        <span class="keyword">if</span> (servletClass == <span class="literal">null</span>) &#123;</span><br><span class="line">            unavailable(<span class="literal">null</span>);</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ServletException</span></span><br><span class="line">                (sm.getString(<span class="string">&quot;standardWrapper.notClass&quot;</span>, getName()));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 从 Context 中获取 Servlet</span></span><br><span class="line">        <span class="type">InstanceManager</span> <span class="variable">instanceManager</span> <span class="operator">=</span> ((StandardContext)getParent()).getInstanceManager();</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            servlet = (Servlet) instanceManager.newInstance(servletClass);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (ClassCastException e) &#123;</span><br><span class="line">            unavailable(<span class="literal">null</span>);</span><br><span class="line">            <span class="comment">// Restore the context ClassLoader</span></span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ServletException</span></span><br><span class="line">                (sm.getString(<span class="string">&quot;standardWrapper.notServlet&quot;</span>, servletClass), e);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">            e = ExceptionUtils.unwrapInvocationTargetException(e);</span><br><span class="line">            ExceptionUtils.handleThrowable(e);</span><br><span class="line">            unavailable(<span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Added extra log statement for Bugzilla 36630:</span></span><br><span class="line">            <span class="comment">// https://bz.apache.org/bugzilla/show_bug.cgi?id=36630</span></span><br><span class="line">            <span class="keyword">if</span>(log.isDebugEnabled()) &#123;</span><br><span class="line">                log.debug(sm.getString(<span class="string">&quot;standardWrapper.instantiate&quot;</span>, servletClass), e);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Restore the context ClassLoader</span></span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ServletException</span></span><br><span class="line">                (sm.getString(<span class="string">&quot;standardWrapper.instantiate&quot;</span>, servletClass), e);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 加载声明了 MultipartConfig 注解的信息</span></span><br><span class="line">        <span class="keyword">if</span> (multipartConfigElement == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="type">MultipartConfig</span> <span class="variable">annotation</span> <span class="operator">=</span></span><br><span class="line">                    servlet.getClass().getAnnotation(MultipartConfig.class);</span><br><span class="line">            <span class="keyword">if</span> (annotation != <span class="literal">null</span>) &#123;</span><br><span class="line">                multipartConfigElement =</span><br><span class="line">                        <span class="keyword">new</span> <span class="title class_">MultipartConfigElement</span>(annotation);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 对 servlet 类型进行检查</span></span><br><span class="line">        <span class="keyword">if</span> (servlet <span class="keyword">instanceof</span> ContainerServlet) &#123;</span><br><span class="line">            ((ContainerServlet) servlet).setWrapper(<span class="built_in">this</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        classLoadTime=(<span class="type">int</span>) (System.currentTimeMillis() -t1);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (servlet <span class="keyword">instanceof</span> SingleThreadModel) &#123;</span><br><span class="line">            <span class="keyword">if</span> (instancePool == <span class="literal">null</span>) &#123;</span><br><span class="line">                instancePool = <span class="keyword">new</span> <span class="title class_">Stack</span>&lt;&gt;();</span><br><span class="line">            &#125;</span><br><span class="line">            singleThreadModel = <span class="literal">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 初始化 servlet</span></span><br><span class="line">        initServlet(servlet);</span><br><span class="line"></span><br><span class="line">        fireContainerEvent(<span class="string">&quot;load&quot;</span>, <span class="built_in">this</span>);</span><br><span class="line"></span><br><span class="line">        loadTime=System.currentTimeMillis() -t1;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (swallowOutput) &#123;</span><br><span class="line">            <span class="type">String</span> <span class="variable">log</span> <span class="operator">=</span> SystemLogHandler.stopCapture();</span><br><span class="line">            <span class="keyword">if</span> (log != <span class="literal">null</span> &amp;&amp; log.length() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="keyword">if</span> (getServletContext() != <span class="literal">null</span>) &#123;</span><br><span class="line">                    getServletContext().log(log);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    out.println(log);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> servlet;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里加载 Servlet，如果该 Servlet 没有被实例化过，那么一定要加载一个。</p>
+<blockquote>
+<p>到目前为止，大致介绍了 Tomcat8 的主要组件，对 Tomcat 的整体架构也有个大致了解了，Tomcat 源码进行重构后，可读性确实要好很多，建议大家可以去尝试分析下，里面的使用的一些设计模式，我们在实际编码过程中，还是有一定的借鉴意义。</p>
+</blockquote>
+
+      
+    </div>
+    
+    
+    
+
+    
+      <div>
+        <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://yangtao.ytao.top/ytao%E5%85%AC%E4%BC%97%E5%8F%B7.jpg" alt=" wechat" style="width: 200px; max-width: 100%;"/>
+    <div>我的公众号</div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>原创技术分享，感谢您的鼓励！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span><!-- Donate -->赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="https://yangtao.ytao.top/wechatpay.png" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="https://yangtao.ytao.top/alipay.jpg" alt=" Alipay"/>
+        <p>Alipay</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Tomcat/" rel="tag"># Tomcat</a>
+          
+            <a href="/tags/%E5%BA%94%E7%94%A8%E6%9C%8D%E5%8A%A1%E5%99%A8/" rel="tag"># 应用服务器</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/11/17/7_websocket/" rel="next" title="WebSocket实现Web端即时通信">
+                <i class="fa fa-chevron-left"></i> WebSocket实现Web端即时通信
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/12/01/9_crawl/" rel="prev" title="Scrapy爬虫及案例剖析">
+                Scrapy爬虫及案例剖析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+          <div class="post-spread">
+            
+          </div>
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="https://yangtao.ytao.top/ytao-about_1.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name">
+               
+              <!-- 
+              <br>
+              杨&nbsp;滔 
+              -->
+              <br>
+              原创技术博客
+              </p>
+              <p class="site-description motion-element" itemprop="description">
+              路漫漫其修远兮，吾将上下而求索
+              <!-- 
+              
+              -->
+              </p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="/links/" target="_blank" title="Links">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Links</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E4%BD%93%E7%BB%93%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">总体结构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Server"><span class="nav-number">2.</span> <span class="nav-text">Server</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Service"><span class="nav-number">3.</span> <span class="nav-text">Service</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Connector"><span class="nav-number">4.</span> <span class="nav-text">Connector</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Engine"><span class="nav-number">5.</span> <span class="nav-text">Engine</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Host"><span class="nav-number">6.</span> <span class="nav-text">Host</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Context"><span class="nav-number">7.</span> <span class="nav-text">Context</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Wrapper"><span class="nav-number">8.</span> <span class="nav-text">Wrapper</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yang Tao</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+<!-- 访问统计 -->
+
+    <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span id="busuanzi_container_site_pv">本站总访问量<span id="busuanzi_value_site_pv"></span>次</span>
+    <span class="post-meta-divider">|</span>
+    <span id="busuanzi_container_site_uv">本站访客数<span id="busuanzi_value_site_uv"></span>人</span>
+
+
+<!-- 备案号 -->
+<p>
+	<a class="beian" style="font-size:12px; color:gray; border-bottom: none;" href="https://beian.miit.gov.cn" target="_blank">
+    粤ICP备19117800号
+	</a>
+</p>
+
+
+<script src="https://my.openwrite.cn/js/readmore.js" type="text/javascript"></script>
+<script>
+    const btw = new BTWPlugin();
+    btw.init({
+        id: 'owContent',
+        blogId: '15390-1575515911767-844',
+        name: '『ytao』',
+        qrcode: 'http://yangtao.ytao.top/ytao%E5%85%AC%E4%BC%97%E5%8F%B7.jpg',
+        keyword: 'ytao',
+    });
+</script>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+  <script type="text/javascript" src="/js/src/exturl.js?v=5.1.4"></script>
+
+
+</body>
+</html>

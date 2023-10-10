@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh_CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="MongoDB,数据库," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="ytao's blog" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="前言MongoDB 是一个基于分布式文件存储的半结构化的非关系型数据库。在海量数据中，可以较高性能的处理存取操作。它是以 BSON 格式进行数据存储（类似 JSON 格式，但类型更为丰富），因此对于复杂的数据类型，可以较轻松的保存和处理。同时，在非关系型数据库阵容中，相比其他数据库产品，它拥有更丰富的功能，并且与关系型数据库类型，所以对于新手使用也能快速上手。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MongoDB 安装及文档的基本操作">
+<meta property="og:url" content="https://ytao.top/2020/05/31/26-mongodb-install-base/index.html">
+<meta property="og:site_name" content="ytao&#39;s blog">
+<meta property="og:description" content="前言MongoDB 是一个基于分布式文件存储的半结构化的非关系型数据库。在海量数据中，可以较高性能的处理存取操作。它是以 BSON 格式进行数据存储（类似 JSON 格式，但类型更为丰富），因此对于复杂的数据类型，可以较轻松的保存和处理。同时，在非关系型数据库阵容中，相比其他数据库产品，它拥有更丰富的功能，并且与关系型数据库类型，所以对于新手使用也能快速上手。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://images.ytao.top/mongoDB.jpg">
+<meta property="og:image" content="https://images.ytao.top/mongoDB-download.png">
+<meta property="og:image" content="https://images.ytao.top/mongoDB-successfully.png">
+<meta property="og:image" content="https://images.ytao.top/mongoDB-login-ui.png">
+<meta property="og:image" content="https://images.ytao.top/mongoDB-insertOne-data.png">
+<meta property="og:image" content="https://images.ytao.top/mongoDB-insertMany-data.png">
+<meta property="og:image" content="https://images.ytao.top/mongoDB-update-arrayfilters.png">
+<meta property="og:image" content="https://images.ytao.top/mongoDB-findOne.png">
+<meta property="og:image" content="https://images.ytao.top/mongoDB-find.png">
+<meta property="article:published_time" content="2020-05-30T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-10-10T14:18:14.221Z">
+<meta property="article:author" content="Yang Tao">
+<meta property="article:tag" content="MongoDB">
+<meta property="article:tag" content="数据库">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.ytao.top/mongoDB.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+<!-- 百度统计代码获取 -->
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?3887053ae7b22ae6e4c1ba814b74f794";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+<!-- 百度自动推送链接 -->
+<script>
+  (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      if (curProtocol === 'https') {
+          bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+      }
+      else {
+          bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+      }
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+  })();
+</script>
+
+
+
+
+  <link rel="canonical" href="https://ytao.top/2020/05/31/26-mongodb-install-base/"/>
+
+
+
+
+
+  <title>MongoDB 安装及文档的基本操作 | ytao's blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh_CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ytao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    <!-- 文章里设置公众号导流 -->
+    <div id="owContent">
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://ytao.top/2020/05/31/26-mongodb-install-base/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://yangtao.ytao.top/ytao-about_1.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ytao's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">MongoDB 安装及文档的基本操作</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-05-31T00:00:00+08:00">
+                2020-05-31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MongoDB/" itemprop="url" rel="index">
+                    <span itemprop="name">MongoDB</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-eye"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="https://images.ytao.top/mongoDB.jpg"></p>
+<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>MongoDB 是一个基于分布式文件存储的半结构化的非关系型数据库。在海量数据中，可以较高性能的处理存取操作。它是以 BSON 格式进行数据存储（类似 JSON 格式，但类型更为丰富），因此对于复杂的数据类型，可以较轻松的保存和处理。同时，在非关系型数据库阵容中，相比其他数据库产品，它拥有更丰富的功能，并且与关系型数据库类型，所以对于新手使用也能快速上手。</p>
+<span id="more"></span>
+
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><blockquote>
+<p>环境：CentOS 7<br>版本号：4.2.6 企业版<br>版本：免安版（TGZ）</p>
+</blockquote>
+<h2 id="安装包"><a href="#安装包" class="headerlink" title="安装包"></a>安装包</h2><p>访问官网链接下载链接：<a target="_blank" rel="noopener" href="https://www.mongodb.com/download-center/enterprise">https://www.mongodb.com/download-center/enterprise</a></p>
+<p>我这里使用的是企业版，下载选项如图：</p>
+<p><img src="https://images.ytao.top/mongoDB-download.png"></p>
+<p>下载后得到压缩包 mongodb-linux-x86_64-enterprise-rhel70-4.2.6.tgz</p>
+<p>将下载的压缩包上传至对应目录，然后进行解压</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt; tar -zxvf mongodb-linux-x86_64-enterprise-rhel70-4.2.6.tgz</span><br></pre></td></tr></table></figure>
+
+<h2 id="配置文件"><a href="#配置文件" class="headerlink" title="配置文件"></a>配置文件</h2><p>当前使用的是免安版，所以 mongoDB 的配置文件需要自己手动创建。如果使用的是安装版，安装后配置文件会在 &#x2F;etc&#x2F;mongod.conf 中。</p>
+<p>创建配置前，先创建 data、log、run 三个目录，分别对应的数据存储目录、日志目录、进程 ID 保存目录</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; <span class="built_in">mkdir</span> -p /var/mongodb/data</span><br><span class="line">&gt; <span class="built_in">mkdir</span> -p /var/mongodb/log</span><br><span class="line">&gt; <span class="built_in">mkdir</span> -p /var/mongodb/run</span><br></pre></td></tr></table></figure>
+
+<p>创建 mongod.conf 在 &#x2F;var&#x2F;mongodb 目录中，内容如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># mongod.conf</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># for documentation of all options, see:</span></span><br><span class="line"><span class="comment">#   http://docs.mongodb.org/manual/reference/configuration-options/</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># where to write logging data.</span></span><br><span class="line">systemLog:</span><br><span class="line">  destination: file</span><br><span class="line">  logAppend: <span class="literal">true</span></span><br><span class="line">  path: /var/mongodb/log/mongo.log <span class="comment"># 日志文件路径设置</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Where and how to store data.</span></span><br><span class="line">storage:</span><br><span class="line">  dbPath: /var/mongodb/data <span class="comment"># 数据存储路径</span></span><br><span class="line">  journal:</span><br><span class="line">    enabled: <span class="literal">true</span></span><br><span class="line"><span class="comment">#  engine:</span></span><br><span class="line"><span class="comment">#  wiredTiger:</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># how the process runs</span></span><br><span class="line">processManagement:</span><br><span class="line">  fork: <span class="literal">true</span>  <span class="comment"># fork and run in background</span></span><br><span class="line">  pidFilePath: /var/mongodb/run/mongod.pid  <span class="comment"># location of pidfile  </span></span><br><span class="line">  timeZoneInfo: /usr/share/zoneinfo</span><br><span class="line"></span><br><span class="line"><span class="comment"># network interfaces</span></span><br><span class="line">net:</span><br><span class="line">  port: 27017 <span class="comment"># 端口号</span></span><br><span class="line">  bindIp: 127.0.0.1  <span class="comment"># 监听 IP ，即可访问 IP，默认是本机</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">security:</span><br><span class="line">  authorization: enabled</span><br><span class="line">  </span><br><span class="line"><span class="comment">#operationProfiling:</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#replication:</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#sharding:</span></span><br><span class="line"></span><br><span class="line"><span class="comment">## Enterprise-Only Options</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#auditLog:</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#snmp:</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>配置文件常用基本属性：</p>
+<table>
+<thead>
+<tr>
+<th align="center">属性</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">systemLog#destination</td>
+<td>日志输出位置，file 或 syslog，使用 file 时，必须指定 path</td>
+</tr>
+<tr>
+<td align="center">systemLog#logAppend</td>
+<td>当实例启动时日志是否追加写入到现有日志中</td>
+</tr>
+<tr>
+<td align="center">systemLog#path</td>
+<td>日志存放路径</td>
+</tr>
+<tr>
+<td align="center">storage#dbPath</td>
+<td>数据存储路径</td>
+</tr>
+<tr>
+<td align="center">storage#journal#enabled</td>
+<td>日志是否永久性，可以用来恢复数据</td>
+</tr>
+<tr>
+<td align="center">processManagement#fork</td>
+<td>是否后台运行服务</td>
+</tr>
+<tr>
+<td align="center">processManagement#pidFilePath</td>
+<td>pid 文件的存储路径</td>
+</tr>
+<tr>
+<td align="center">processManagement#timeZoneInfo</td>
+<td>数据库使用的时区路径</td>
+</tr>
+<tr>
+<td align="center">net#port</td>
+<td>数据使用的端口</td>
+</tr>
+<tr>
+<td align="center">net#bindIp</td>
+<td>监听客户端连接的 IP，即可访问的 IP</td>
+</tr>
+<tr>
+<td align="center">security#authorization</td>
+<td>是否启动权限管控</td>
+</tr>
+</tbody></table>
+<h2 id="服务启停"><a href="#服务启停" class="headerlink" title="服务启停"></a>服务启停</h2><p>将解压后的安装包 bin 路径添加到环境变量 &#x2F;etc&#x2F;profile 中，在 PATH 上进行追加</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># mongoDB</span></span><br><span class="line">PATH=<span class="variable">$PATH</span>:/usr/local/software/mongoDB/mongodb-linux-x86_64-enterprise-rhel70-4.2.6/bin</span><br></pre></td></tr></table></figure>
+
+<p>使用 &#x2F;var&#x2F;mongodb&#x2F;mongod.conf 配置文件启动：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt; mongod -f /var/mongodb/mongodb.conf</span><br></pre></td></tr></table></figure>
+
+<p>如图所示，则启动成功</p>
+<p><img src="https://images.ytao.top/mongoDB-successfully.png"></p>
+<p>启动完成后，验证是否正常运行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt; mongo</span><br></pre></td></tr></table></figure>
+
+<p>如果正常运行，则进入登录页面</p>
+<p><img src="https://images.ytao.top/mongoDB-login-ui.png"></p>
+<p>创建账号，并设置角色为 root</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; use admin</span><br><span class="line">&gt; db.createUser(&#123;user:<span class="string">&quot;xxxx&quot;</span>,<span class="built_in">pwd</span>:<span class="string">&quot;xxxxxx&quot;</span>,roles:[<span class="string">&quot;root&quot;</span>]&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>设置账号后，重新登录，此时需要进行账号权限校验</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt; mongo -u accont -p password</span><br></pre></td></tr></table></figure>
+
+<p>停止 MongoDB 服务，必须切换到 admin 数据库</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; use admin</span><br><span class="line">&gt; db.shutdownServer()</span><br></pre></td></tr></table></figure>
+
+<h1 id="基本操作"><a href="#基本操作" class="headerlink" title="基本操作"></a>基本操作</h1><p>在介绍几本操作之前，现将常用的 MongoDB 对象与关系型数据库进行类比，便于更好理解 MongoDB 对象。</p>
+<table>
+<thead>
+<tr>
+<th align="center">MongoDB</th>
+<th>关系型数据库</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Database（数据库）</td>
+<td>Database（数据库）</td>
+</tr>
+<tr>
+<td align="center">Collection（集合）</td>
+<td>Table（表）</td>
+</tr>
+<tr>
+<td align="center">Document（文档）</td>
+<td>Row（行）</td>
+</tr>
+<tr>
+<td align="center">Field（字段）</td>
+<td>Column（列）</td>
+</tr>
+</tbody></table>
+<h2 id="Database-的操作"><a href="#Database-的操作" class="headerlink" title="Database 的操作"></a>Database 的操作</h2><p>数据创建和选择，都是使用<code>use db</code>命令</p>
+<p>查看所有数据库</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt; show dbs</span><br></pre></td></tr></table></figure>
+
+<p>删除数据库，先选择再删除</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; use db</span><br><span class="line">&gt; db.dropDatabase()</span><br></pre></td></tr></table></figure>
+
+<h2 id="Collection-的操作"><a href="#Collection-的操作" class="headerlink" title="Collection 的操作"></a>Collection 的操作</h2><p>创建集合命令，同时，如果没有先创建集合，插入数据时会自动创建集合</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt; db.createCollection(collectionName, [options])</span><br></pre></td></tr></table></figure>
+
+<p>其中<code>options</code>为可选参数，主要是数据的校验规则，这里不展开分析。</p>
+<p>查看数据库中所有集合</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt; show collections</span><br></pre></td></tr></table></figure>
+
+<p>选择集合</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; db.getCollection(collectionName)</span><br><span class="line">或</span><br><span class="line">&gt; db.collectionName</span><br></pre></td></tr></table></figure>
+
+<p>删除集合</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt; db.collectionName.drop()</span><br></pre></td></tr></table></figure>
+
+<h2 id="插入"><a href="#插入" class="headerlink" title="插入"></a>插入</h2><p>MongoDB 插入方法有 <strong>insertOne()、insertMany()、insert()、save()</strong> 。其中 insert() 功能就包括了 insertOne() 和 insertMany() 功能。</p>
+<h3 id="insertOne"><a href="#insertOne" class="headerlink" title="insertOne"></a>insertOne</h3><p>insertOne() 是向数据库中插入一个文档，语法格式为：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">db.collect.insertOne(</span><br><span class="line">    &lt;document&gt;,</span><br><span class="line">    &#123;</span><br><span class="line">        writeConcern: &lt;document&gt;</span><br><span class="line">    &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>指令 insertOne() 中参数： </p>
+<ul>
+<li>document 参数为 插入的 BSON 数据</li>
+<li>writeConcern 为写入策略，是可选参数</li>
+</ul>
+<p>向 MongoDB 的 ytao 数据库中，插入一条 article 集合的数据</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">db.article.insertOne(</span><br><span class="line">    &#123;</span><br><span class="line">        title: <span class="string">&quot;Dubbo 负载均衡的实现&quot;</span>,</span><br><span class="line">        url: <span class="string">&quot;https://ytao.top/2020/05/02/23-dubbo-loadbalance/&quot;</span>,</span><br><span class="line">        author: <span class="string">&quot;ytao&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>数据库数据为：</p>
+<p><img src="https://images.ytao.top/mongoDB-insertOne-data.png"></p>
+<p><strong>注意：</strong> 如果插入数据时，没指定 _id ，则会自动生成 _id ；如果指定 _id ，则必须 _id 在数据库中存在，否则会报错插入失败。</p>
+<h3 id="insertMany"><a href="#insertMany" class="headerlink" title="insertMany"></a>insertMany</h3><p>insertMany() 方法是一次插入多个文档，语法格式为：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">db.collect.insertMany(</span><br><span class="line">    [&lt;document 1&gt;, &lt;document 2&gt;],</span><br><span class="line">    &#123;</span><br><span class="line">        writeConcern: &lt;document&gt;,</span><br><span class="line">        ordered: &lt;boolean&gt;</span><br><span class="line">    &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>参数<code>ordered</code>为是否有序插入文档，可选参数，默认 true。</p>
+<p>向 MongoDB 的 ytao 数据库中，插入了两条 article 集合的数据</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">db.article.insertMany(</span><br><span class="line">    [</span><br><span class="line">    &#123;</span><br><span class="line">        title: <span class="string">&quot;Netty中粘包/拆包处理&quot;</span>,</span><br><span class="line">        url: <span class="string">&quot;https://ytao.top/2019/12/09/10-netty/&quot;</span>,</span><br><span class="line">        author: <span class="string">&quot;ytao&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        title: <span class="string">&quot;WebSocket实现Web端即时通信&quot;</span>,</span><br><span class="line">        url: <span class="string">&quot;https://ytao.top/2019/11/17/7_websocket/&quot;</span>,</span><br><span class="line">        author: <span class="string">&quot;ytao&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">    ]</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>插入后的数据</p>
+<p><img src="https://images.ytao.top/mongoDB-insertMany-data.png"></p>
+<p>同理，与 insertOne() 相同，插入重复插入已存在的 _id ，否则报错。</p>
+<h3 id="insert"><a href="#insert" class="headerlink" title="insert"></a>insert</h3><p>insert() 可以插入单个或多个文档，<strong>这个也是最较为常用的方法</strong>，其语法为</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">db.collect.insert(</span><br><span class="line">    &lt;document&gt; or [&lt;document 1&gt;, &lt;document 2&gt;],</span><br><span class="line">    &#123;</span><br><span class="line">        writeConcern: &lt;document&gt;,</span><br><span class="line">        ordered: &lt;boolean&gt;</span><br><span class="line">    &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>插入的文档如果是单个，则类似 insertOne() 的插入方式；如果插入的文档是多个，则类似 insertMany() 的插入方式。其中参数 writeConcern 和 ordered 都是一样。</p>
+<h3 id="save"><a href="#save" class="headerlink" title="save"></a>save</h3><p>save() 也可以进行数据插入，当新插入的 _id 存在时，会将已存在的文档进行覆盖，如果 _id 不存在时，则类似 insertOne() 的方式插入。其操作语法：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">db.collect.save(</span><br><span class="line">    &lt;document&gt;,</span><br><span class="line">    &#123;</span><br><span class="line">        writeConcern: &lt;document&gt;</span><br><span class="line">    &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h2 id="更新"><a href="#更新" class="headerlink" title="更新"></a>更新</h2><p>进行更新的方法有 ** updateOne()、updateMany()、update()、replaceOne() 以及 save() **。其中 update() 包括 updateOne() 和 updateMany() 的功能。</p>
+<h3 id="update"><a href="#update" class="headerlink" title="update"></a>update</h3><p>通过 update() 可以更新一个或多个文档，其语法：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">db.collection.update(</span><br><span class="line">    &lt;query&gt;,</span><br><span class="line">    &lt;update&gt;,</span><br><span class="line">    &#123;</span><br><span class="line">        upsert: &lt;boolean&gt;,</span><br><span class="line">        multi: &lt;boolean&gt;,</span><br><span class="line">        writeConcern &lt;document&gt;,</span><br><span class="line">        collation: &lt;document&gt;,</span><br><span class="line">        arrayFilters: [&lt;filter1&gt;,&lt;filter2&gt;]</span><br><span class="line">    &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>update 的参数：</p>
+<ul>
+<li>query：要更新文档的查询条件</li>
+<li>update：要更新的字段</li>
+<li>upsert：默认为 false。当设置 true 时，如果更新的条件没有匹配到数据时，则插入此更新条件。反之，设为 false 时，则不插入。</li>
+<li>multi：默认为 false。当查询条件匹配到多条数据时，如果设置为 true，则会更新所有匹配的数据；如果设置为 false，则更新匹配出的第一条数据。</li>
+<li>writeConcern：和上面 insert 的参数一样。</li>
+<li>collation：更新数据的排序规则。</li>
+<li>arrayFilters：更新数据中数组格式数据的某个特定元素。</li>
+</ul>
+<p>接下来就演示两个例子，一个普通更新，一个带使用 arrayFilters 数据的更新，这个比较难说明，但通过例子就容易理解。</p>
+<p>更新前数据：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="string">&quot;_id&quot;</span> : ObjectId(<span class="string">&quot;5ed299cee89845fb9ec805e4&quot;</span>),</span><br><span class="line">    <span class="string">&quot;title&quot;</span> : <span class="string">&quot;WebSocket实现Web端即时通信&quot;</span>,</span><br><span class="line">    <span class="string">&quot;url&quot;</span> : <span class="string">&quot;https://ytao.top/2019/11/17/7_websocket/&quot;</span>,</span><br><span class="line">    <span class="string">&quot;author&quot;</span> : <span class="string">&quot;ytao&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>案例一</strong> 将<code>author</code>数据更新为<code>[&quot;杨滔&quot;, &quot;ytao&quot;]</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">db.article.update(</span><br><span class="line">    &#123;title: <span class="string">&quot;WebSocket实现Web端即时通信&quot;</span>&#125;,</span><br><span class="line">    &#123;<span class="variable">$set</span>: &#123;author: [<span class="string">&quot;杨滔&quot;</span>, <span class="string">&quot;ytao&quot;</span>]&#125;&#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p><strong>案例二</strong> 将<code>author</code>数据<code>[&quot;杨滔&quot;, &quot;ytao&quot;]</code>的<code>杨滔</code>更新为<code>YangTao</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">db.article.update(</span><br><span class="line">    &#123;title: <span class="string">&quot;WebSocket实现Web端即时通信&quot;</span>&#125;,</span><br><span class="line">    &#123;<span class="variable">$set</span>: &#123;<span class="string">&quot;author.$[idx]&quot;</span>: <span class="string">&quot;YangTao&quot;</span>&#125;&#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        arrayFilters:[</span><br><span class="line">            &#123;<span class="string">&quot;idx&quot;</span>: &#123;<span class="variable">$eq</span>: <span class="string">&quot;杨滔&quot;</span>&#125;&#125;</span><br><span class="line">        ]</span><br><span class="line">    &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>上面<code>idx</code>表示数组中元素的位置。</p>
+<p>更新后的数据</p>
+<p><img src="https://images.ytao.top/mongoDB-update-arrayfilters.png"></p>
+<h3 id="updateOne"><a href="#updateOne" class="headerlink" title="updateOne"></a>updateOne</h3><p>updateOne() 只能更新一个文档，和 update() 使用类似，将<code>multi</code>参数值为 false 一样，这里不再使用案例演示。</p>
+<p>语法：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">db.collection.updateOne(</span><br><span class="line">   &lt;filter&gt;,</span><br><span class="line">   &lt;update&gt;,</span><br><span class="line">   &#123;</span><br><span class="line">     upsert: &lt;boolean&gt;,</span><br><span class="line">     writeConcern: &lt;document&gt;,</span><br><span class="line">     collation: &lt;document&gt;,</span><br><span class="line">     arrayFilters: [ &lt;filterdocument1&gt;, ... ],</span><br><span class="line">     hint:  &lt;document|string&gt; </span><br><span class="line">   &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p><code>hint</code>是<code>4.2.1</code>版本中新增的参数，用于指定更新文档的索引。</p>
+<h3 id="updateMany"><a href="#updateMany" class="headerlink" title="updateMany"></a>updateMany</h3><p>updateMany() 同样和 update() 更新多个文档使用一样。</p>
+<p>语法：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">db.collection.updateMany(</span><br><span class="line">   &lt;filter&gt;,</span><br><span class="line">   &lt;update&gt;,</span><br><span class="line">   &#123;</span><br><span class="line">     upsert: &lt;boolean&gt;,</span><br><span class="line">     writeConcern: &lt;document&gt;,</span><br><span class="line">     collation: &lt;document&gt;,</span><br><span class="line">     arrayFilters: [ &lt;filterdocument1&gt;, ... ],</span><br><span class="line">     hint:  &lt;document|string&gt; </span><br><span class="line">   &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h3 id="replaceOne"><a href="#replaceOne" class="headerlink" title="replaceOne"></a>replaceOne</h3><p>replaceOne 将一个文档完全覆盖，并且不需要指定 _id。只能覆盖一个文档。</p>
+<p>语法：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">db.collection.replaceOne(</span><br><span class="line">   &lt;filter&gt;,</span><br><span class="line">   &lt;replacement&gt;,</span><br><span class="line">   &#123;</span><br><span class="line">     upsert: &lt;boolean&gt;,</span><br><span class="line">     writeConcern: &lt;document&gt;,</span><br><span class="line">     collation: &lt;document&gt;,</span><br><span class="line">     hint: &lt;document|string&gt; </span><br><span class="line">   &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h3 id="save-1"><a href="#save-1" class="headerlink" title="save"></a>save</h3><p>save() 在更新中是指定 _id 的方式进行文档覆盖。即上文插入中的 save() 用法。</p>
+<h2 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h2><p>删除文档的方法有 <strong>deleteOne()、deleteMany()、remove()</strong></p>
+<h3 id="deleteOne"><a href="#deleteOne" class="headerlink" title="deleteOne"></a>deleteOne</h3><p>deleteOne() 一次只能删除一个文档，其语法：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">db.collection.deleteOne(</span><br><span class="line">   &lt;filter&gt;,</span><br><span class="line">   &#123;</span><br><span class="line">      writeConcern: &lt;document&gt;,</span><br><span class="line">      collation: &lt;document&gt;</span><br><span class="line">   &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p><code>filter</code>为删除文档的过滤条件。</p>
+<h3 id="deleteMany"><a href="#deleteMany" class="headerlink" title="deleteMany"></a>deleteMany</h3><p>deleteMany() 一次可删除多个匹配到的文档，其语法：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">db.collection.deleteMany(</span><br><span class="line">   &lt;filter&gt;,</span><br><span class="line">   &#123;</span><br><span class="line">      writeConcern: &lt;document&gt;,</span><br><span class="line">      collation: &lt;document&gt;</span><br><span class="line">   &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h3 id="remove"><a href="#remove" class="headerlink" title="remove"></a>remove</h3><p>remove() 是删除查询出的文档，其语法有两个：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">db.collection.remove(</span><br><span class="line">   &lt;query&gt;,</span><br><span class="line">   &lt;justOne&gt;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>或者</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">db.collection.remove(</span><br><span class="line">   &lt;query&gt;,</span><br><span class="line">   &#123;</span><br><span class="line">     justOne: &lt;boolean&gt;,</span><br><span class="line">     writeConcern: &lt;document&gt;,</span><br><span class="line">     collation: &lt;document&gt;</span><br><span class="line">   &#125;</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p><code>justOne</code>参数默认为 false，表示删除全部匹配到的数据；true 表示只删除第一个文档</p>
+<h2 id="查询"><a href="#查询" class="headerlink" title="查询"></a>查询</h2><p>MongoDB 中常用的基本查询有 ** findOne() ** 和 ** find() **。</p>
+<h3 id="findOne"><a href="#findOne" class="headerlink" title="findOne"></a>findOne</h3><p>findOne() 只返回匹配到的第一个文档，语法为：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">db.collection.findOne(</span><br><span class="line">    &lt;query&gt;, </span><br><span class="line">    &lt;projection&gt;</span><br><span class="line"></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<ul>
+<li>query 表示查询条件。</li>
+<li>projection 表示返回的字段（Field）。</li>
+</ul>
+<p>下面查询一个文档，并且只返回<code>title</code>和<code>url</code></p>
+<p><img src="https://images.ytao.top/mongoDB-findOne.png"></p>
+<p>通过指定字段的 value 为 1，即表示查询后返回的字段。</p>
+<h3 id="find"><a href="#find" class="headerlink" title="find"></a>find</h3><p>find() 是返回所有匹配到的集合，语法为：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">db.collection.find(</span><br><span class="line">    &lt;query&gt;, </span><br><span class="line">    &lt;projection&gt;</span><br><span class="line"></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>下面案例查询查询结果：</p>
+<p><img src="https://images.ytao.top/mongoDB-find.png"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><blockquote>
+<p>本文对 MongoDB 的入门和基本操作进行了简单的了解，在这使用过程中，有点类似关系型数据库操作的影子，所以对有关系型数据库使用经验的人，上手是较为简单的。</p>
+</blockquote>
+<p>更多使用操作，官方文档：<a target="_blank" rel="noopener" href="https://docs.mongodb.com/manual/reference/">https://docs.mongodb.com/manual/reference/</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+      <div>
+        <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://yangtao.ytao.top/ytao%E5%85%AC%E4%BC%97%E5%8F%B7.jpg" alt=" wechat" style="width: 200px; max-width: 100%;"/>
+    <div>我的公众号</div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>原创技术分享，感谢您的鼓励！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span><!-- Donate -->赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="https://yangtao.ytao.top/wechatpay.png" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="https://yangtao.ytao.top/alipay.jpg" alt=" Alipay"/>
+        <p>Alipay</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/MongoDB/" rel="tag"># MongoDB</a>
+          
+            <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag"># 数据库</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/05/17/25-thread-count/" rel="next" title="Java 多线程中使用 JDK 自带工具类实现计数器">
+                <i class="fa fa-chevron-left"></i> Java 多线程中使用 JDK 自带工具类实现计数器
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/06/14/27-mongodb-query/" rel="prev" title="MongoDB 常用查询操作">
+                MongoDB 常用查询操作 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+          <div class="post-spread">
+            
+          </div>
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="https://yangtao.ytao.top/ytao-about_1.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name">
+               
+              <!-- 
+              <br>
+              杨&nbsp;滔 
+              -->
+              <br>
+              原创技术博客
+              </p>
+              <p class="site-description motion-element" itemprop="description">
+              路漫漫其修远兮，吾将上下而求索
+              <!-- 
+              
+              -->
+              </p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="/links/" target="_blank" title="Links">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Links</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">2.</span> <span class="nav-text">安装</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E5%8C%85"><span class="nav-number">2.1.</span> <span class="nav-text">安装包</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">2.2.</span> <span class="nav-text">配置文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%90%AF%E5%81%9C"><span class="nav-number">2.3.</span> <span class="nav-text">服务启停</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E6%93%8D%E4%BD%9C"><span class="nav-number">3.</span> <span class="nav-text">基本操作</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Database-%E7%9A%84%E6%93%8D%E4%BD%9C"><span class="nav-number">3.1.</span> <span class="nav-text">Database 的操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Collection-%E7%9A%84%E6%93%8D%E4%BD%9C"><span class="nav-number">3.2.</span> <span class="nav-text">Collection 的操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8F%92%E5%85%A5"><span class="nav-number">3.3.</span> <span class="nav-text">插入</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#insertOne"><span class="nav-number">3.3.1.</span> <span class="nav-text">insertOne</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#insertMany"><span class="nav-number">3.3.2.</span> <span class="nav-text">insertMany</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#insert"><span class="nav-number">3.3.3.</span> <span class="nav-text">insert</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#save"><span class="nav-number">3.3.4.</span> <span class="nav-text">save</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0"><span class="nav-number">3.4.</span> <span class="nav-text">更新</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#update"><span class="nav-number">3.4.1.</span> <span class="nav-text">update</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#updateOne"><span class="nav-number">3.4.2.</span> <span class="nav-text">updateOne</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#updateMany"><span class="nav-number">3.4.3.</span> <span class="nav-text">updateMany</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#replaceOne"><span class="nav-number">3.4.4.</span> <span class="nav-text">replaceOne</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#save-1"><span class="nav-number">3.4.5.</span> <span class="nav-text">save</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A0%E9%99%A4"><span class="nav-number">3.5.</span> <span class="nav-text">删除</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#deleteOne"><span class="nav-number">3.5.1.</span> <span class="nav-text">deleteOne</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#deleteMany"><span class="nav-number">3.5.2.</span> <span class="nav-text">deleteMany</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#remove"><span class="nav-number">3.5.3.</span> <span class="nav-text">remove</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9F%A5%E8%AF%A2"><span class="nav-number">3.6.</span> <span class="nav-text">查询</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#findOne"><span class="nav-number">3.6.1.</span> <span class="nav-text">findOne</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#find"><span class="nav-number">3.6.2.</span> <span class="nav-text">find</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yang Tao</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+<!-- 访问统计 -->
+
+    <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span id="busuanzi_container_site_pv">本站总访问量<span id="busuanzi_value_site_pv"></span>次</span>
+    <span class="post-meta-divider">|</span>
+    <span id="busuanzi_container_site_uv">本站访客数<span id="busuanzi_value_site_uv"></span>人</span>
+
+
+<!-- 备案号 -->
+<p>
+	<a class="beian" style="font-size:12px; color:gray; border-bottom: none;" href="https://beian.miit.gov.cn" target="_blank">
+    粤ICP备19117800号
+	</a>
+</p>
+
+
+<script src="https://my.openwrite.cn/js/readmore.js" type="text/javascript"></script>
+<script>
+    const btw = new BTWPlugin();
+    btw.init({
+        id: 'owContent',
+        blogId: '15390-1575515911767-844',
+        name: '『ytao』',
+        qrcode: 'http://yangtao.ytao.top/ytao%E5%85%AC%E4%BC%97%E5%8F%B7.jpg',
+        keyword: 'ytao',
+    });
+</script>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+  <script type="text/javascript" src="/js/src/exturl.js?v=5.1.4"></script>
+
+
+</body>
+</html>

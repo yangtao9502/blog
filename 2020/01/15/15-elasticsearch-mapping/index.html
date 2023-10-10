@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh_CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="ElasticSearch,搜索引擎," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="ytao's blog" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="本文案例操作，建议先阅读我之前的文章《ElasticSearch之安装及基本操作API》  Mapping (映射)类似关系型数据库中的表的结构定义。我们将数据以 JSON 格式存入到 ElasticSearch 中后，在搜索引擎中 JSON 字段映射对应的类型，这时需要 mapping 来定义内容的类型。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ElasticSearch之映射常用操作">
+<meta property="og:url" content="https://ytao.top/2020/01/15/15-elasticsearch-mapping/index.html">
+<meta property="og:site_name" content="ytao&#39;s blog">
+<meta property="og:description" content="本文案例操作，建议先阅读我之前的文章《ElasticSearch之安装及基本操作API》  Mapping (映射)类似关系型数据库中的表的结构定义。我们将数据以 JSON 格式存入到 ElasticSearch 中后，在搜索引擎中 JSON 字段映射对应的类型，这时需要 mapping 来定义内容的类型。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://images.ytao.top/elasticsearch.png">
+<meta property="og:image" content="https://images.ytao.top/es-mapping-1.png">
+<meta property="og:image" content="https://images.ytao.top/es-dynamic-true.png">
+<meta property="og:image" content="https://images.ytao.top/es-dynamic-true-search.png">
+<meta property="og:image" content="https://images.ytao.top/es-dynamic-true-mapping.png">
+<meta property="og:image" content="https://images.ytao.top/es-dynamic-false-search.png">
+<meta property="og:image" content="https://images.ytao.top/es-dynamic-false-search2.png">
+<meta property="og:image" content="https://images.ytao.top/es-dynamic-false-mapping.png">
+<meta property="og:image" content="https://images.ytao.top/es-dynamic-strict-search.png">
+<meta property="og:image" content="https://images.ytao.top/es-dynamic_date_format.png">
+<meta property="og:image" content="https://images.ytao.top/es-search-text.png">
+<meta property="og:image" content="https://images.ytao.top/es-search-keyword.png">
+<meta property="og:image" content="https://images.ytao.top/es-mapping-2.png">
+<meta property="og:image" content="https://images.ytao.top/es-index-error.png">
+<meta property="og:image" content="https://images.ytao.top/es-search-null-1.png">
+<meta property="og:image" content="https://images.ytao.top/es-null_value.png">
+<meta property="og:image" content="https://images.ytao.top/es-search-null-2.png">
+<meta property="og:image" content="https://images.ytao.top/es-copy_to.png">
+<meta property="og:image" content="https://images.ytao.top/es-copy_to-search.png">
+<meta property="article:published_time" content="2020-01-14T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-10-10T14:18:14.206Z">
+<meta property="article:author" content="Yang Tao">
+<meta property="article:tag" content="ElasticSearch">
+<meta property="article:tag" content="搜索引擎">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.ytao.top/elasticsearch.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+<!-- 百度统计代码获取 -->
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?3887053ae7b22ae6e4c1ba814b74f794";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+<!-- 百度自动推送链接 -->
+<script>
+  (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      if (curProtocol === 'https') {
+          bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+      }
+      else {
+          bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+      }
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+  })();
+</script>
+
+
+
+
+  <link rel="canonical" href="https://ytao.top/2020/01/15/15-elasticsearch-mapping/"/>
+
+
+
+
+
+  <title>ElasticSearch之映射常用操作 | ytao's blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh_CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ytao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    <!-- 文章里设置公众号导流 -->
+    <div id="owContent">
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://ytao.top/2020/01/15/15-elasticsearch-mapping/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://yangtao.ytao.top/ytao-about_1.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ytao's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ElasticSearch之映射常用操作</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-01-15T00:00:00+08:00">
+                2020-01-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ElasticSearch/" itemprop="url" rel="index">
+                    <span itemprop="name">ElasticSearch</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-eye"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="https://images.ytao.top/elasticsearch.png"></p>
+<p>本文案例操作，建议先阅读我之前的文章<a href="https://ytao.top/2019/12/14/11-elasticsearch/">《ElasticSearch之安装及基本操作API》</a></p>
+<blockquote>
+<p>Mapping (映射)类似关系型数据库中的表的结构定义。我们将数据以 JSON 格式存入到 ElasticSearch 中后，在搜索引擎中 JSON 字段映射对应的类型，这时需要 mapping 来定义内容的类型。</p>
+</blockquote>
+<span id="more"></span>
+
+<h1 id="字段类型"><a href="#字段类型" class="headerlink" title="字段类型"></a>字段类型</h1><p>JSON 数据类型映射到 ElasticSearch 定义的类型，常用的简单类型有：</p>
+<table>
+<thead>
+<tr>
+<th align="center">JSON类型</th>
+<th align="center">ElasticSearch 类型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">文本类型</td>
+<td align="center">Text&#x2F;Keyword</td>
+</tr>
+<tr>
+<td align="center">整数类型</td>
+<td align="center">long&#x2F;integer</td>
+</tr>
+<tr>
+<td align="center">浮点类型</td>
+<td align="center">float&#x2F;double</td>
+</tr>
+<tr>
+<td align="center">时间类型</td>
+<td align="center">date</td>
+</tr>
+<tr>
+<td align="center">布尔值</td>
+<td align="center">boolean</td>
+</tr>
+<tr>
+<td align="center">数组</td>
+<td align="center">Text&#x2F;Keyword</td>
+</tr>
+</tbody></table>
+<p>上面要注意的是时间类型，JSON 中并没有时间类型，这里主要指时间格式数据的类型。</p>
+<h1 id="定义映射"><a href="#定义映射" class="headerlink" title="定义映射"></a>定义映射</h1><p>在关系型数据库中，存储数据之前，我们会先创建表结构，给字段指定一个存在的类型。同样 ElasticSearch 在进行数据存储前，也可以先定义好存储数据的 Mapping 结构。<br>先定义一个简单的 person Mapping：</p>
+<p><img src="https://images.ytao.top/es-mapping-1.png"></p>
+<p>上图中就是一个 Mapping 的定义，如果是在 ElasticSearch7 之前，mappings 里还有 _type 属性。</p>
+<h1 id="动态映射"><a href="#动态映射" class="headerlink" title="动态映射"></a>动态映射</h1><p>当没有事先定义好 Mapping，添加数据时，ElasticSearch 会自动根据字段进行换算出对应的类型，但是换算出来的类型并不一定是我们想要的字段类型，还是需要人为的干预进行修改成想要的 Mapping。</p>
+<h1 id="更新映射"><a href="#更新映射" class="headerlink" title="更新映射"></a>更新映射</h1><p>使用 <strong>dynamic</strong> 控制映射是否可以被更新。</p>
+<h2 id="dynamic-true"><a href="#dynamic-true" class="headerlink" title="dynamic-true"></a>dynamic-true</h2><p>设置 dynamic 为<code>true</code>是默认 dynamic 的默认值，新增字段数据可以写入，同时也可以被索引，Mapping 结构也会被更新。</p>
+<p><img src="https://images.ytao.top/es-dynamic-true.png"></p>
+<p>添加数据，同时多添加一个没被定义的 <code>gender</code> 字段。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 向 person 中添加数据</span></span><br><span class="line">PUT person/_doc/1</span><br><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;uId&quot;</span>: 1,</span><br><span class="line">  <span class="string">&quot;name&quot;</span>: <span class="string">&quot;ytao&quot;</span>,</span><br><span class="line">  <span class="string">&quot;age&quot;</span>: 18,</span><br><span class="line">  <span class="string">&quot;address&quot;</span>: <span class="string">&quot;广东省珠海市&quot;</span>,</span><br><span class="line">  <span class="string">&quot;birthday&quot;</span>: <span class="string">&quot;2020-01-15T12:00:00Z&quot;</span>,</span><br><span class="line">  <span class="string">&quot;money&quot;</span>: 108.2,</span><br><span class="line">  <span class="string">&quot;isStrong&quot;</span>: <span class="literal">true</span>,</span><br><span class="line">  <span class="string">&quot;gender&quot;</span>: <span class="string">&quot;男&quot;</span>    <span class="comment"># Mapping 中未定义的字段</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>添加成功，搜索 <code>gender</code> 字段：</p>
+<p><img src="https://images.ytao.top/es-dynamic-true-search.png"></p>
+<p>查看 Mapping 结构：</p>
+<p><img src="https://images.ytao.top/es-dynamic-true-mapping.png"></p>
+<p>新添加的字段值，在添加过程中 Mapping 已自动添加字段。</p>
+<h2 id="dynamic-false"><a href="#dynamic-false" class="headerlink" title="dynamic-false"></a>dynamic-false</h2><p>设置 dynamic 为<code>false</code>时，新增字段数据可以写入，不可以被索引，Mapping 结构会被更新。<br>同样先将 dynamic 设置为 false，然后向里面添加数据，其他步骤和上面 true 操作一样。定义 Mapping，添加数据。<br>搜索 <code>gender</code> 字段：</p>
+<p><img src="https://images.ytao.top/es-dynamic-false-search.png"></p>
+<p>此时新增字段数据无法被索引，但数据可以写入。</p>
+<p><img src="https://images.ytao.top/es-dynamic-false-search2.png"></p>
+<p>Mappnig 也不会添加新增的字段：</p>
+<p><img src="https://images.ytao.top/es-dynamic-false-mapping.png"></p>
+<h2 id="dynamic-strict"><a href="#dynamic-strict" class="headerlink" title="dynamic-strict"></a>dynamic-strict</h2><p>设置 dynamic 为<code>strict</code>时，从字面上意思也可以看出，对于动态映射是较严格的，新增字段数据不可以写入，不可以被索引，Mapping 结构不会被更新。只能按照定义好的 Mapping 结构添加数据。<br>在添加新字段数据时，就马上会抛出异常：</p>
+<p><img src="https://images.ytao.top/es-dynamic-strict-search.png"></p>
+<h1 id="自动识别日期类型"><a href="#自动识别日期类型" class="headerlink" title="自动识别日期类型"></a>自动识别日期类型</h1><p>上文中，当 dynamic 设置为 true 时，添加新字段数据自动识别类型更新 Mapping，如果是日期类型的话，我们是可以指定识别的类型。<br>指定 person 的 <strong>dynamic_date_formats</strong> 格式：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">PUT person/_mapping</span><br><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;dynamic_date_formats&quot;</span>: [<span class="string">&quot;yyyy/MM/dd&quot;</span>]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里是可以指定多个时间格式。<br>向 person 添加新数据，分别是 today 和 firstDate：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">PUT person/_doc/2</span><br><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;today&quot;</span>: <span class="string">&quot;2020-01-15&quot;</span>,</span><br><span class="line">  <span class="string">&quot;firstDate&quot;</span>: <span class="string">&quot;2020/01/15&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>添加新字段数据后的 Mapping：</p>
+<p><img src="https://images.ytao.top/es-dynamic_date_format.png"></p>
+<p>由于上面我们指定了时间格式为 <code>yyyy/MM/dd</code> 时是可以识别为时间格式，所以 today 字段的值为 <code>yyyy-MM-dd</code> 格式无法识别为时间类型，判为 text 类型。</p>
+<h1 id="多字段"><a href="#多字段" class="headerlink" title="多字段"></a>多字段</h1><p>Mapping 中可以定义 <strong>fields</strong> 多字段属性，以满足不同场景下的实现。比如 <code>address</code> 定义为 <code>text</code> 类型，fields 里面又有定义 <code>keyword</code> 类型，这里主要是区分两个不同不同使用场景。</p>
+<ul>
+<li><code>text</code> 会建立分词倒排索引，用于全文检索。</li>
+<li><code>keyword</code> 不会建立分词倒排索引，用于排序和聚合。</li>
+</ul>
+<p>添加数据：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 向 person 中添加数据</span></span><br><span class="line">PUT person/_doc/1</span><br><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;uId&quot;</span>: 1,</span><br><span class="line">  <span class="string">&quot;name&quot;</span>: <span class="string">&quot;ytao&quot;</span>,</span><br><span class="line">  <span class="string">&quot;age&quot;</span>: 18,</span><br><span class="line">  <span class="string">&quot;address&quot;</span>: <span class="string">&quot;广东省珠海市&quot;</span>,</span><br><span class="line">  <span class="string">&quot;birthday&quot;</span>: <span class="string">&quot;2020-01-15T12:00:00Z&quot;</span>,</span><br><span class="line">  <span class="string">&quot;money&quot;</span>: 108.2,</span><br><span class="line">  <span class="string">&quot;isStrong&quot;</span>: <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>查询<code>address</code>数据。</p>
+<p><img src="https://images.ytao.top/es-search-text.png"></p>
+<p>查询<code>address.keyword</code>数据。</p>
+<p><img src="https://images.ytao.top/es-search-keyword.png"></p>
+<p>通过<code>keyword</code>检索时，由于不会建立分词索引，并没有获取到数据。</p>
+<h1 id="控制索引"><a href="#控制索引" class="headerlink" title="控制索引"></a>控制索引</h1><p>在字段中使用 <strong>index</strong> 指定当前字段索引是否能被搜索到。指定类型为 boolean 类型，false 为不可搜索到，true 为可以搜索到。<br>先删除之前的 Mapping：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DELETE person</span><br></pre></td></tr></table></figure>
+
+<p>创建 Mapping，设置<code>name</code>属性的 <code>index</code> 为 false。</p>
+<p><img src="https://images.ytao.top/es-mapping-2.png"></p>
+<p>再次添加上面的数据后搜索<code>name</code>字段：</p>
+<p><img src="https://images.ytao.top/es-index-error.png"></p>
+<p>字段 index 设置 false 后，由于没有被索引，所以搜索无法获取到索引。</p>
+<h1 id="空值处理"><a href="#空值处理" class="headerlink" title="空值处理"></a>空值处理</h1><p>现在向 ElasticSearch 中添加一条 address 为空的数据：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">PUT person/_doc/2</span><br><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;uId&quot;</span>: 2,</span><br><span class="line">  <span class="string">&quot;name&quot;</span>: <span class="string">&quot;Jack&quot;</span>,</span><br><span class="line">  <span class="string">&quot;age&quot;</span>: 22,</span><br><span class="line">  <span class="string">&quot;address&quot;</span>: null,</span><br><span class="line">  <span class="string">&quot;birthday&quot;</span>: <span class="string">&quot;2020-01-15T12:00:00Z&quot;</span>,</span><br><span class="line">  <span class="string">&quot;money&quot;</span>: 68.7,</span><br><span class="line">  <span class="string">&quot;isStrong&quot;</span>: <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>搜索 address.keyword 为空的数据：</p>
+<p><img src="https://images.ytao.top/es-search-null-1.png"></p>
+<p>搜索返回异常，默认是不被允许搜索 NUll。<br>这是需要在 Mapping 指定 <strong>null_value</strong> 属性，并且不能在<code>text</code>类型中声明。</p>
+<p><img src="https://images.ytao.top/es-null_value.png"></p>
+<p>搜索 address.keyword 为空的数据：</p>
+<p><img src="https://images.ytao.top/es-search-null-2.png"></p>
+<p>设置 <code>&quot;null_value&quot;: &quot;NULL&quot;</code> 后，空值可以处理搜索。</p>
+<h1 id="聚合多个字段"><a href="#聚合多个字段" class="headerlink" title="聚合多个字段"></a>聚合多个字段</h1><p>聚合多个字段放到一个索引中，使用 <strong>copy_to</strong> 进行聚合。例如我们在多字段查询中，这是不需要对每个字段进行过滤筛选，只需对聚合字段即可。<br>在使用 copy_to 时，是通过指定聚合的名称实现。</p>
+<p><img src="https://images.ytao.top/es-copy_to.png"></p>
+<p>实际上，copy_to 不使用数组格式添加名称，也会自动转换成数据格式。</p>
+<p>添加两条数据，待校验搜索：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 向 person 中添加数据</span></span><br><span class="line">PUT person/_doc/1</span><br><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;uId&quot;</span>: 1,</span><br><span class="line">  <span class="string">&quot;name&quot;</span>: <span class="string">&quot;ytao&quot;</span>,</span><br><span class="line">  <span class="string">&quot;age&quot;</span>: 18,</span><br><span class="line">  <span class="string">&quot;address&quot;</span>: <span class="string">&quot;广东省珠海市&quot;</span>,</span><br><span class="line">  <span class="string">&quot;birthday&quot;</span>: <span class="string">&quot;2020-01-15T12:00:00Z&quot;</span>,</span><br><span class="line">  <span class="string">&quot;money&quot;</span>: 108.2,</span><br><span class="line">  <span class="string">&quot;isStrong&quot;</span>: <span class="literal">true</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">PUT person/_doc/2</span><br><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;uId&quot;</span>: 2,</span><br><span class="line">  <span class="string">&quot;name&quot;</span>: <span class="string">&quot;杨广东&quot;</span>,</span><br><span class="line">  <span class="string">&quot;age&quot;</span>: 22,</span><br><span class="line">  <span class="string">&quot;address&quot;</span>: null,</span><br><span class="line">  <span class="string">&quot;birthday&quot;</span>: <span class="string">&quot;2020-01-15T12:00:00Z&quot;</span>,</span><br><span class="line">  <span class="string">&quot;money&quot;</span>: 68.7,</span><br><span class="line">  <span class="string">&quot;isStrong&quot;</span>: <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>查询 <code>full_name</code> 的值，会返回 name 和 address 相关的值的对象。</p>
+<p><img src="https://images.ytao.top/es-copy_to-search.png"></p>
+<p>从上面返回结果看到，_source 中的字段没有增加相应的 copy_to 字段名，所以 copy_to 只会拷贝字段内容至索引，并不会改变包含的字段。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><blockquote>
+<p>通过本文对创建 Mapping 文件的常用并且实用的操作介绍，也基本能掌握这些日常的使用。了解 Mapping 的功能操作，相信对存储时的设计也有一定帮助。</p>
+</blockquote>
+
+      
+    </div>
+    
+    
+    
+
+    
+      <div>
+        <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://yangtao.ytao.top/ytao%E5%85%AC%E4%BC%97%E5%8F%B7.jpg" alt=" wechat" style="width: 200px; max-width: 100%;"/>
+    <div>我的公众号</div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>原创技术分享，感谢您的鼓励！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span><!-- Donate -->赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="https://yangtao.ytao.top/wechatpay.png" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="https://yangtao.ytao.top/alipay.jpg" alt=" Alipay"/>
+        <p>Alipay</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/ElasticSearch/" rel="tag"># ElasticSearch</a>
+          
+            <a href="/tags/%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E/" rel="tag"># 搜索引擎</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/01/06/14-redis-streams/" rel="next" title="Redis5新特性Streams作消息队列">
+                <i class="fa fa-chevron-left"></i> Redis5新特性Streams作消息队列
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/03/01/16-dubbo/" rel="prev" title="Dubbo之服务暴露">
+                Dubbo之服务暴露 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+          <div class="post-spread">
+            
+          </div>
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="https://yangtao.ytao.top/ytao-about_1.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name">
+               
+              <!-- 
+              <br>
+              杨&nbsp;滔 
+              -->
+              <br>
+              原创技术博客
+              </p>
+              <p class="site-description motion-element" itemprop="description">
+              路漫漫其修远兮，吾将上下而求索
+              <!-- 
+              
+              -->
+              </p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="/links/" target="_blank" title="Links">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Links</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AD%97%E6%AE%B5%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.</span> <span class="nav-text">字段类型</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89%E6%98%A0%E5%B0%84"><span class="nav-number">2.</span> <span class="nav-text">定义映射</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8A%A8%E6%80%81%E6%98%A0%E5%B0%84"><span class="nav-number">3.</span> <span class="nav-text">动态映射</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E6%98%A0%E5%B0%84"><span class="nav-number">4.</span> <span class="nav-text">更新映射</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#dynamic-true"><span class="nav-number">4.1.</span> <span class="nav-text">dynamic-true</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dynamic-false"><span class="nav-number">4.2.</span> <span class="nav-text">dynamic-false</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dynamic-strict"><span class="nav-number">4.3.</span> <span class="nav-text">dynamic-strict</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E8%AF%86%E5%88%AB%E6%97%A5%E6%9C%9F%E7%B1%BB%E5%9E%8B"><span class="nav-number">5.</span> <span class="nav-text">自动识别日期类型</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A4%9A%E5%AD%97%E6%AE%B5"><span class="nav-number">6.</span> <span class="nav-text">多字段</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8E%A7%E5%88%B6%E7%B4%A2%E5%BC%95"><span class="nav-number">7.</span> <span class="nav-text">控制索引</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A9%BA%E5%80%BC%E5%A4%84%E7%90%86"><span class="nav-number">8.</span> <span class="nav-text">空值处理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%81%9A%E5%90%88%E5%A4%9A%E4%B8%AA%E5%AD%97%E6%AE%B5"><span class="nav-number">9.</span> <span class="nav-text">聚合多个字段</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">10.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yang Tao</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+<!-- 访问统计 -->
+
+    <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span id="busuanzi_container_site_pv">本站总访问量<span id="busuanzi_value_site_pv"></span>次</span>
+    <span class="post-meta-divider">|</span>
+    <span id="busuanzi_container_site_uv">本站访客数<span id="busuanzi_value_site_uv"></span>人</span>
+
+
+<!-- 备案号 -->
+<p>
+	<a class="beian" style="font-size:12px; color:gray; border-bottom: none;" href="https://beian.miit.gov.cn" target="_blank">
+    粤ICP备19117800号
+	</a>
+</p>
+
+
+<script src="https://my.openwrite.cn/js/readmore.js" type="text/javascript"></script>
+<script>
+    const btw = new BTWPlugin();
+    btw.init({
+        id: 'owContent',
+        blogId: '15390-1575515911767-844',
+        name: '『ytao』',
+        qrcode: 'http://yangtao.ytao.top/ytao%E5%85%AC%E4%BC%97%E5%8F%B7.jpg',
+        keyword: 'ytao',
+    });
+</script>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+  <script type="text/javascript" src="/js/src/exturl.js?v=5.1.4"></script>
+
+
+</body>
+</html>

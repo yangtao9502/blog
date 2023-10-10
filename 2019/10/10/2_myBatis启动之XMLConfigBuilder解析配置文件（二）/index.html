@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh_CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="MyBatis,源码," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="ytao's blog" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="前言  XMLConfigBuilder 是BaseBuilder（解析中会涉及到讲解）的其中一个子类，它的作用是把MyBatis的XML及相关配置解析出来，然后保存到Configuration中。本文就解析过程按照执行顺序进行分析，掌握常用配置的解析原理。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MyBatis启动之XMLConfigBuilder解析配置文件（二）">
+<meta property="og:url" content="https://ytao.top/2019/10/10/2_myBatis%E5%90%AF%E5%8A%A8%E4%B9%8BXMLConfigBuilder%E8%A7%A3%E6%9E%90%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%EF%BC%88%E4%BA%8C%EF%BC%89/index.html">
+<meta property="og:site_name" content="ytao&#39;s blog">
+<meta property="og:description" content="前言  XMLConfigBuilder 是BaseBuilder（解析中会涉及到讲解）的其中一个子类，它的作用是把MyBatis的XML及相关配置解析出来，然后保存到Configuration中。本文就解析过程按照执行顺序进行分析，掌握常用配置的解析原理。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://images.ytao.top/401280w_1l_2o_100sh.jpg">
+<meta property="og:image" content="https://images.ytao.top/BaseBuilder%E6%89%80%E6%9C%89%E5%AD%90%E7%B1%BB.png">
+<meta property="og:image" content="https://images.ytao.top/new_configuration.png">
+<meta property="article:published_time" content="2019-10-09T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-10-10T14:18:14.221Z">
+<meta property="article:author" content="Yang Tao">
+<meta property="article:tag" content="MyBatis">
+<meta property="article:tag" content="源码">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.ytao.top/401280w_1l_2o_100sh.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+<!-- 百度统计代码获取 -->
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?3887053ae7b22ae6e4c1ba814b74f794";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+<!-- 百度自动推送链接 -->
+<script>
+  (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      if (curProtocol === 'https') {
+          bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+      }
+      else {
+          bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+      }
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+  })();
+</script>
+
+
+
+
+  <link rel="canonical" href="https://ytao.top/2019/10/10/2_myBatis启动之XMLConfigBuilder解析配置文件（二）/"/>
+
+
+
+
+
+  <title>MyBatis启动之XMLConfigBuilder解析配置文件（二） | ytao's blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh_CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ytao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    <!-- 文章里设置公众号导流 -->
+    <div id="owContent">
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://ytao.top/2019/10/10/2_myBatis%E5%90%AF%E5%8A%A8%E4%B9%8BXMLConfigBuilder%E8%A7%A3%E6%9E%90%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%EF%BC%88%E4%BA%8C%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://yangtao.ytao.top/ytao-about_1.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ytao's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">MyBatis启动之XMLConfigBuilder解析配置文件（二）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-10-10T00:00:00+08:00">
+                2019-10-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MyBatis/" itemprop="url" rel="index">
+                    <span itemprop="name">MyBatis</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-eye"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="https://images.ytao.top/401280w_1l_2o_100sh.jpg" alt="ytao"></p>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p><img src="https://images.ytao.top/BaseBuilder%E6%89%80%E6%9C%89%E5%AD%90%E7%B1%BB.png" alt="BaseBuilder所有子类"></p>
+<blockquote>
+<p><code>XMLConfigBuilder</code> 是<code>BaseBuilder</code>（解析中会涉及到讲解）的其中一个子类，它的作用是把MyBatis的XML及相关配置解析出来，然后保存到<code>Configuration</code>中。本文就解析过程按照执行顺序进行分析，掌握常用配置的解析原理。</p>
+</blockquote>
+<span id="more"></span>
+<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p>调用<code>XMLConfigBuilder</code>进行解析，要进行两步操作，上篇文章中【MyBatis之启动分析（一）】有提到。</p>
+<h3 id="实例化XMLConfigBuilder对象。"><a href="#实例化XMLConfigBuilder对象。" class="headerlink" title="实例化XMLConfigBuilder对象。"></a>实例化<code>XMLConfigBuilder</code>对象。</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="title function_">XMLConfigBuilder</span><span class="params">(XPathParser parser, String environment, Properties props)</span> &#123;</span><br><span class="line">    <span class="comment">// 调用父类的构造方法</span></span><br><span class="line">    <span class="built_in">super</span>(<span class="keyword">new</span> <span class="title class_">Configuration</span>());</span><br><span class="line">    ErrorContext.instance().resource(<span class="string">&quot;SQL Mapper Configuration&quot;</span>);</span><br><span class="line">    <span class="built_in">this</span>.configuration.setVariables(props);</span><br><span class="line">    <span class="built_in">this</span>.parsed = <span class="literal">false</span>;</span><br><span class="line">    <span class="built_in">this</span>.environment = environment;</span><br><span class="line">    <span class="built_in">this</span>.parser = parser;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="实例化Configuration"><a href="#实例化Configuration" class="headerlink" title="实例化Configuration"></a>实例化<code>Configuration</code></h4><p>通过<code>new Configuration()</code>的方式实例化：<br><img src="https://images.ytao.top/new_configuration.png" alt="new Configuration()"><br><code>typeAliasRegistry</code>是一个类型别名注册器，实现原理就是维护一份<code>HashMap</code>，别名作为<code>key</code>，类的全限定名作为<code>value</code>。这里将框架中使用的类注册到类型别名注册器中。<br><code>TypeAliasRegistry.registerAlias</code>代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">registerAlias</span><span class="params">(String alias, Class&lt;?&gt; value)</span> &#123;</span><br><span class="line"><span class="keyword">if</span> (alias == <span class="literal">null</span>) &#123;</span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">TypeException</span>(<span class="string">&quot;The parameter alias cannot be null&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// issue #748</span></span><br><span class="line"><span class="comment">//  在验证是否存在key和保存kv前，统一将key转换成小写</span></span><br><span class="line"><span class="type">String</span> <span class="variable">key</span> <span class="operator">=</span> alias.toLowerCase(Locale.ENGLISH);</span><br><span class="line"><span class="keyword">if</span> (TYPE_ALIASES.containsKey(key) &amp;&amp; TYPE_ALIASES.get(key) != <span class="literal">null</span> &amp;&amp; !TYPE_ALIASES.get(key).equals(value)) &#123;</span><br><span class="line">  <span class="comment">// 当注册的类型已存在时，抛出异常</span></span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">TypeException</span>(<span class="string">&quot;The alias &#x27;&quot;</span> + alias + <span class="string">&quot;&#x27; is already mapped to the value &#x27;&quot;</span> + TYPE_ALIASES.get(key).getName() + <span class="string">&quot;&#x27;.&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// TYPE_ALIASES 为定义的一个HashMap</span></span><br><span class="line">TYPE_ALIASES.put(key, value);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在实例化<code>Configuration</code>类过程中，在该类里除了实例化了<code>TypeAliasRegistry</code>还实例化了另外一个下面用到的的类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 类型处理器注册器</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">final</span> <span class="type">TypeAliasRegistry</span> <span class="variable">typeAliasRegistry</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TypeAliasRegistry</span>();</span><br></pre></td></tr></table></figure>
+<p><code>TypeHandlerRegistry</code>和<code>TypeAliasRegistry</code>实例化逻辑相似，里面注册了一些常用类型和处理器，代码易懂。<br><code>TypeHandlerRegistry</code>的属性</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// jdbc类型和TypeHandler的映射关系，key必须是JdbcType的枚举类型，读取结果集数据时，将jdbc类型转换成java类型</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;JdbcType, TypeHandler&lt;?&gt;&gt; JDBC_TYPE_HANDLER_MAP = <span class="keyword">new</span> <span class="title class_">EnumMap</span>&lt;JdbcType, TypeHandler&lt;?&gt;&gt;(JdbcType.class);</span><br><span class="line"><span class="comment">// Java类型与JdbcType类型的键值对，存在一对多的映射关系</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;Type, Map&lt;JdbcType, TypeHandler&lt;?&gt;&gt;&gt; TYPE_HANDLER_MAP = <span class="keyword">new</span> <span class="title class_">ConcurrentHashMap</span>&lt;Type, Map&lt;JdbcType, TypeHandler&lt;?&gt;&gt;&gt;();</span><br><span class="line"><span class="comment">// 没有相应的类型处理器时，使用的处理器</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> TypeHandler&lt;Object&gt; UNKNOWN_TYPE_HANDLER = <span class="keyword">new</span> <span class="title class_">UnknownTypeHandler</span>(<span class="built_in">this</span>);</span><br><span class="line"><span class="comment">// 类型处理器类类型和类型处理器的映射关系</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;Class&lt;?&gt;, TypeHandler&lt;?&gt;&gt; ALL_TYPE_HANDLERS_MAP = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;Class&lt;?&gt;, TypeHandler&lt;?&gt;&gt;();</span><br><span class="line"><span class="comment">// 空处理器的值，用来做校验</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Map&lt;JdbcType, TypeHandler&lt;?&gt;&gt; NULL_TYPE_HANDLER_MAP = Collections.emptyMap();</span><br><span class="line"><span class="comment">// 默认枚举类型处理器</span></span><br><span class="line"><span class="keyword">private</span> Class&lt;? <span class="keyword">extends</span> <span class="title class_">TypeHandler</span>&gt; defaultEnumTypeHandler = EnumTypeHandler.class;</span><br></pre></td></tr></table></figure>
+<p><code>TypeHandlerRegistry</code>构造函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="title function_">TypeHandlerRegistry</span><span class="params">()</span> &#123;</span><br><span class="line">    register(Boolean.class, <span class="keyword">new</span> <span class="title class_">BooleanTypeHandler</span>());</span><br><span class="line">    register(<span class="type">boolean</span>.class, <span class="keyword">new</span> <span class="title class_">BooleanTypeHandler</span>());</span><br><span class="line">    register(JdbcType.BOOLEAN, <span class="keyword">new</span> <span class="title class_">BooleanTypeHandler</span>());</span><br><span class="line">    register(JdbcType.BIT, <span class="keyword">new</span> <span class="title class_">BooleanTypeHandler</span>());</span><br><span class="line"></span><br><span class="line">    register(Byte.class, <span class="keyword">new</span> <span class="title class_">ByteTypeHandler</span>());</span><br><span class="line">    register(<span class="type">byte</span>.class, <span class="keyword">new</span> <span class="title class_">ByteTypeHandler</span>());</span><br><span class="line">    register(JdbcType.TINYINT, <span class="keyword">new</span> <span class="title class_">ByteTypeHandler</span>());</span><br><span class="line"></span><br><span class="line">    register(Short.class, <span class="keyword">new</span> <span class="title class_">ShortTypeHandler</span>());</span><br><span class="line">    register(<span class="type">short</span>.class, <span class="keyword">new</span> <span class="title class_">ShortTypeHandler</span>());</span><br><span class="line">    register(JdbcType.SMALLINT, <span class="keyword">new</span> <span class="title class_">ShortTypeHandler</span>());</span><br><span class="line"></span><br><span class="line">    register(Integer.class, <span class="keyword">new</span> <span class="title class_">IntegerTypeHandler</span>());</span><br><span class="line">    register(<span class="type">int</span>.class, <span class="keyword">new</span> <span class="title class_">IntegerTypeHandler</span>());</span><br><span class="line">    register(JdbcType.INTEGER, <span class="keyword">new</span> <span class="title class_">IntegerTypeHandler</span>());</span><br><span class="line"></span><br><span class="line">    register(Long.class, <span class="keyword">new</span> <span class="title class_">LongTypeHandler</span>());</span><br><span class="line">    register(<span class="type">long</span>.class, <span class="keyword">new</span> <span class="title class_">LongTypeHandler</span>());</span><br><span class="line"></span><br><span class="line">    register(Float.class, <span class="keyword">new</span> <span class="title class_">FloatTypeHandler</span>());</span><br><span class="line">    register(<span class="type">float</span>.class, <span class="keyword">new</span> <span class="title class_">FloatTypeHandler</span>());</span><br><span class="line">    register(JdbcType.FLOAT, <span class="keyword">new</span> <span class="title class_">FloatTypeHandler</span>());</span><br><span class="line"></span><br><span class="line">    register(Double.class, <span class="keyword">new</span> <span class="title class_">DoubleTypeHandler</span>());</span><br><span class="line">    register(<span class="type">double</span>.class, <span class="keyword">new</span> <span class="title class_">DoubleTypeHandler</span>());</span><br><span class="line">    register(JdbcType.DOUBLE, <span class="keyword">new</span> <span class="title class_">DoubleTypeHandler</span>());</span><br><span class="line"></span><br><span class="line">    register(Reader.class, <span class="keyword">new</span> <span class="title class_">ClobReaderTypeHandler</span>());</span><br><span class="line">    register(String.class, <span class="keyword">new</span> <span class="title class_">StringTypeHandler</span>());</span><br><span class="line">    register(String.class, JdbcType.CHAR, <span class="keyword">new</span> <span class="title class_">StringTypeHandler</span>());</span><br><span class="line">    register(String.class, JdbcType.CLOB, <span class="keyword">new</span> <span class="title class_">ClobTypeHandler</span>());</span><br><span class="line">    register(String.class, JdbcType.VARCHAR, <span class="keyword">new</span> <span class="title class_">StringTypeHandler</span>());</span><br><span class="line">    register(String.class, JdbcType.LONGVARCHAR, <span class="keyword">new</span> <span class="title class_">ClobTypeHandler</span>());</span><br><span class="line">    register(String.class, JdbcType.NVARCHAR, <span class="keyword">new</span> <span class="title class_">NStringTypeHandler</span>());</span><br><span class="line">    register(String.class, JdbcType.NCHAR, <span class="keyword">new</span> <span class="title class_">NStringTypeHandler</span>());</span><br><span class="line">    register(String.class, JdbcType.NCLOB, <span class="keyword">new</span> <span class="title class_">NClobTypeHandler</span>());</span><br><span class="line">    register(JdbcType.CHAR, <span class="keyword">new</span> <span class="title class_">StringTypeHandler</span>());</span><br><span class="line">    register(JdbcType.VARCHAR, <span class="keyword">new</span> <span class="title class_">StringTypeHandler</span>());</span><br><span class="line">    register(JdbcType.CLOB, <span class="keyword">new</span> <span class="title class_">ClobTypeHandler</span>());</span><br><span class="line">    register(JdbcType.LONGVARCHAR, <span class="keyword">new</span> <span class="title class_">ClobTypeHandler</span>());</span><br><span class="line">    register(JdbcType.NVARCHAR, <span class="keyword">new</span> <span class="title class_">NStringTypeHandler</span>());</span><br><span class="line">    register(JdbcType.NCHAR, <span class="keyword">new</span> <span class="title class_">NStringTypeHandler</span>());</span><br><span class="line">    register(JdbcType.NCLOB, <span class="keyword">new</span> <span class="title class_">NClobTypeHandler</span>());</span><br><span class="line"></span><br><span class="line">    register(Object.class, JdbcType.ARRAY, <span class="keyword">new</span> <span class="title class_">ArrayTypeHandler</span>());</span><br><span class="line">    register(JdbcType.ARRAY, <span class="keyword">new</span> <span class="title class_">ArrayTypeHandler</span>());</span><br><span class="line"></span><br><span class="line">    register(BigInteger.class, <span class="keyword">new</span> <span class="title class_">BigIntegerTypeHandler</span>());</span><br><span class="line">    register(JdbcType.BIGINT, <span class="keyword">new</span> <span class="title class_">LongTypeHandler</span>());</span><br><span class="line"></span><br><span class="line">    register(BigDecimal.class, <span class="keyword">new</span> <span class="title class_">BigDecimalTypeHandler</span>());</span><br><span class="line">    register(JdbcType.REAL, <span class="keyword">new</span> <span class="title class_">BigDecimalTypeHandler</span>());</span><br><span class="line">    register(JdbcType.DECIMAL, <span class="keyword">new</span> <span class="title class_">BigDecimalTypeHandler</span>());</span><br><span class="line">    register(JdbcType.NUMERIC, <span class="keyword">new</span> <span class="title class_">BigDecimalTypeHandler</span>());</span><br><span class="line"></span><br><span class="line">    register(InputStream.class, <span class="keyword">new</span> <span class="title class_">BlobInputStreamTypeHandler</span>());</span><br><span class="line">    register(Byte[].class, <span class="keyword">new</span> <span class="title class_">ByteObjectArrayTypeHandler</span>());</span><br><span class="line">    register(Byte[].class, JdbcType.BLOB, <span class="keyword">new</span> <span class="title class_">BlobByteObjectArrayTypeHandler</span>());</span><br><span class="line">    register(Byte[].class, JdbcType.LONGVARBINARY, <span class="keyword">new</span> <span class="title class_">BlobByteObjectArrayTypeHandler</span>());</span><br><span class="line">    register(<span class="type">byte</span>[].class, <span class="keyword">new</span> <span class="title class_">ByteArrayTypeHandler</span>());</span><br><span class="line">    register(<span class="type">byte</span>[].class, JdbcType.BLOB, <span class="keyword">new</span> <span class="title class_">BlobTypeHandler</span>());</span><br><span class="line">    register(<span class="type">byte</span>[].class, JdbcType.LONGVARBINARY, <span class="keyword">new</span> <span class="title class_">BlobTypeHandler</span>());</span><br><span class="line">    register(JdbcType.LONGVARBINARY, <span class="keyword">new</span> <span class="title class_">BlobTypeHandler</span>());</span><br><span class="line">    register(JdbcType.BLOB, <span class="keyword">new</span> <span class="title class_">BlobTypeHandler</span>());</span><br><span class="line"></span><br><span class="line">    register(Object.class, UNKNOWN_TYPE_HANDLER);</span><br><span class="line">    register(Object.class, JdbcType.OTHER, UNKNOWN_TYPE_HANDLER);</span><br><span class="line">    register(JdbcType.OTHER, UNKNOWN_TYPE_HANDLER);</span><br><span class="line"></span><br><span class="line">    register(Date.class, <span class="keyword">new</span> <span class="title class_">DateTypeHandler</span>());</span><br><span class="line">    register(Date.class, JdbcType.DATE, <span class="keyword">new</span> <span class="title class_">DateOnlyTypeHandler</span>());</span><br><span class="line">    register(Date.class, JdbcType.TIME, <span class="keyword">new</span> <span class="title class_">TimeOnlyTypeHandler</span>());</span><br><span class="line">    register(JdbcType.TIMESTAMP, <span class="keyword">new</span> <span class="title class_">DateTypeHandler</span>());</span><br><span class="line">    register(JdbcType.DATE, <span class="keyword">new</span> <span class="title class_">DateOnlyTypeHandler</span>());</span><br><span class="line">    register(JdbcType.TIME, <span class="keyword">new</span> <span class="title class_">TimeOnlyTypeHandler</span>());</span><br><span class="line"></span><br><span class="line">    register(java.sql.Date.class, <span class="keyword">new</span> <span class="title class_">SqlDateTypeHandler</span>());</span><br><span class="line">    register(java.sql.Time.class, <span class="keyword">new</span> <span class="title class_">SqlTimeTypeHandler</span>());</span><br><span class="line">    register(java.sql.Timestamp.class, <span class="keyword">new</span> <span class="title class_">SqlTimestampTypeHandler</span>());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// mybatis-typehandlers-jsr310</span></span><br><span class="line">    <span class="comment">// 是否包含日期，时间相关的Api，通过判断是否加载java.time.Clock作为依据</span></span><br><span class="line">    <span class="keyword">if</span> (Jdk.dateAndTimeApiExists) &#123;</span><br><span class="line">      <span class="built_in">this</span>.register(Instant.class, InstantTypeHandler.class);</span><br><span class="line">      <span class="built_in">this</span>.register(LocalDateTime.class, LocalDateTimeTypeHandler.class);</span><br><span class="line">      <span class="built_in">this</span>.register(LocalDate.class, LocalDateTypeHandler.class);</span><br><span class="line">      <span class="built_in">this</span>.register(LocalTime.class, LocalTimeTypeHandler.class);</span><br><span class="line">      <span class="built_in">this</span>.register(OffsetDateTime.class, OffsetDateTimeTypeHandler.class);</span><br><span class="line">      <span class="built_in">this</span>.register(OffsetTime.class, OffsetTimeTypeHandler.class);</span><br><span class="line">      <span class="built_in">this</span>.register(ZonedDateTime.class, ZonedDateTimeTypeHandler.class);</span><br><span class="line">      <span class="built_in">this</span>.register(Month.class, MonthTypeHandler.class);</span><br><span class="line">      <span class="built_in">this</span>.register(Year.class, YearTypeHandler.class);</span><br><span class="line">      <span class="built_in">this</span>.register(YearMonth.class, YearMonthTypeHandler.class);</span><br><span class="line">      <span class="built_in">this</span>.register(JapaneseDate.class, JapaneseDateTypeHandler.class);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// issue #273</span></span><br><span class="line">    register(Character.class, <span class="keyword">new</span> <span class="title class_">CharacterTypeHandler</span>());</span><br><span class="line">    register(<span class="type">char</span>.class, <span class="keyword">new</span> <span class="title class_">CharacterTypeHandler</span>());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>里面调用了两个<code>register()</code>重载方法, <code>type + handler</code> 参的<code>TypeHandlerRegistry.register(Class&lt;T&gt; javaType, TypeHandler&lt;? extends T&gt; typeHandler)</code>和 <code>type + jdbc type + handler</code> 参的<code>TypeHandlerRegistry.register(Class&lt;T&gt; type, JdbcType jdbcType, TypeHandler&lt;? extends T&gt; handler)</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// java type + handler</span></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="keyword">void</span> <span class="title function_">register</span><span class="params">(Class&lt;T&gt; javaType, TypeHandler&lt;? extends T&gt; typeHandler)</span> &#123;</span><br><span class="line">    register((Type) javaType, typeHandler);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> &lt;T&gt; <span class="keyword">void</span> <span class="title function_">register</span><span class="params">(Type javaType, TypeHandler&lt;? extends T&gt; typeHandler)</span> &#123;</span><br><span class="line">    <span class="type">MappedJdbcTypes</span> <span class="variable">mappedJdbcTypes</span> <span class="operator">=</span> typeHandler.getClass().getAnnotation(MappedJdbcTypes.class);</span><br><span class="line">    <span class="keyword">if</span> (mappedJdbcTypes != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">for</span> (JdbcType handledJdbcType : mappedJdbcTypes.value()) &#123;</span><br><span class="line">        register(javaType, handledJdbcType, typeHandler);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (mappedJdbcTypes.includeNullJdbcType()) &#123;</span><br><span class="line">        register(javaType, <span class="literal">null</span>, typeHandler);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      register(javaType, <span class="literal">null</span>, typeHandler);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// java type + jdbc type + handler</span></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="keyword">void</span> <span class="title function_">register</span><span class="params">(Class&lt;T&gt; type, JdbcType jdbcType, TypeHandler&lt;? extends T&gt; handler)</span> &#123;</span><br><span class="line">    register((Type) type, jdbcType, handler);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// type + handler 和 type + jdbc type + handler 最终都调用此方法</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">register</span><span class="params">(Type javaType, JdbcType jdbcType, TypeHandler&lt;?&gt; handler)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (javaType != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="comment">// 当 javaType 不为空时， 获取 java 类型的的映射</span></span><br><span class="line">      Map&lt;JdbcType, TypeHandler&lt;?&gt;&gt; map = TYPE_HANDLER_MAP.get(javaType);</span><br><span class="line">      <span class="keyword">if</span> (map == <span class="literal">null</span> || map == NULL_TYPE_HANDLER_MAP) &#123;</span><br><span class="line">        <span class="comment">// 若映射为空，新建一个映射关系</span></span><br><span class="line">        map = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;JdbcType, TypeHandler&lt;?&gt;&gt;();</span><br><span class="line">        <span class="comment">// 保存至类型处理器映射关系中</span></span><br><span class="line">        TYPE_HANDLER_MAP.put(javaType, map);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">// 保存jdbcType和处理器关系，完成 java类型，jdbc类型，处理器三者之间的注册</span></span><br><span class="line">      map.put(jdbcType, handler);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 保存处理器信息中</span></span><br><span class="line">    ALL_TYPE_HANDLERS_MAP.put(handler.getClass(), handler);</span><br><span class="line">&#125;</span><br><span class="line">       </span><br><span class="line"><span class="comment">// MappedJdbcTypes 注解        </span></span><br><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Retention(RetentionPolicy.RUNTIME)</span></span><br><span class="line"><span class="meta">@Target(ElementType.TYPE)</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> MappedJdbcTypes &#123;</span><br><span class="line">  JdbcType[] value();</span><br><span class="line">  <span class="type">boolean</span> <span class="title function_">includeNullJdbcType</span><span class="params">()</span> <span class="keyword">default</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>type + handler</code>方法：先获取处理器的<code>MappedJdbcTypes</code>注解（自定义处理器注解），若注解的<code>value</code>值不为空时，由于该值为<code>JdbcType[]</code>类型，所以<code>for</code>循环 <code>javaType+jdbcType+TypeHandler</code>注册，若<code>includeNullJdbcType</code>（<code>jdbcType</code>是否包含<code>null</code>）为<code>true</code>，默认值为<code>false</code>,注册到相应映射中。若注解的<code>value</code>为<code>null</code>，直接调用注册操作，里面不会注册<code>type + jdbc type + handler</code>关系。</li>
+<li><code>type + jdbc type + handler</code>方法：该方法将java类强制转换为<code>java.lang.reflect.Type</code>类型，然后调用最终注册的方法。</li>
+</ul>
+<h4 id="调用父类BaseBuilder的构造方法"><a href="#调用父类BaseBuilder的构造方法" class="headerlink" title="调用父类BaseBuilder的构造方法"></a>调用父类<code>BaseBuilder</code>的构造方法</h4><p><code>BaseBuilder</code>定义有三个属性</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">final</span> Configuration configuration;</span><br><span class="line"><span class="comment">// 类型别名注册器</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">final</span> TypeAliasRegistry typeAliasRegistry;</span><br><span class="line"><span class="comment">// 类型处理器注册器</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">final</span> TypeHandlerRegistry typeHandlerRegistry;</span><br></pre></td></tr></table></figure>
+<p><code>BaseBuilder</code>构造方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="title function_">BaseBuilder</span><span class="params">(Configuration configuration)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.configuration = configuration;</span><br><span class="line">    <span class="built_in">this</span>.typeAliasRegistry = <span class="built_in">this</span>.configuration.getTypeAliasRegistry();</span><br><span class="line">    <span class="built_in">this</span>.typeHandlerRegistry = <span class="built_in">this</span>.configuration.getTypeHandlerRegistry();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里属性，就是上面讲解到的。</p>
+<h3 id="调用-XMLConfigBuilder-parse-作为解析入口。"><a href="#调用-XMLConfigBuilder-parse-作为解析入口。" class="headerlink" title="调用 XMLConfigBuilder.parse() 作为解析入口。"></a>调用 <code>XMLConfigBuilder.parse()</code> 作为解析入口。</h3><p><code>parse()</code>实现配置文件是否解析过</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Configuration <span class="title function_">parse</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="comment">// 若parsed为true，配置文件解析过</span></span><br><span class="line">    <span class="keyword">if</span> (parsed) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">BuilderException</span>(<span class="string">&quot;Each XMLConfigBuilder can only be used once.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 标志已解析过</span></span><br><span class="line">    parsed = <span class="literal">true</span>;</span><br><span class="line">    <span class="comment">// 从根节点 configuration 开始解析</span></span><br><span class="line">    parseConfiguration(parser.evalNode(<span class="string">&quot;/configuration&quot;</span>));</span><br><span class="line">    <span class="keyword">return</span> configuration;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>解析<code>/configuration</code>里的配置</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">parseConfiguration</span><span class="params">(XNode root)</span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">//issue #117 read properties first</span></span><br><span class="line">      propertiesElement(root.evalNode(<span class="string">&quot;properties&quot;</span>));</span><br><span class="line">      <span class="type">Properties</span> <span class="variable">settings</span> <span class="operator">=</span> settingsAsProperties(root.evalNode(<span class="string">&quot;settings&quot;</span>));</span><br><span class="line">      loadCustomVfs(settings);</span><br><span class="line">      typeAliasesElement(root.evalNode(<span class="string">&quot;typeAliases&quot;</span>));</span><br><span class="line">      pluginElement(root.evalNode(<span class="string">&quot;plugins&quot;</span>));</span><br><span class="line">      objectFactoryElement(root.evalNode(<span class="string">&quot;objectFactory&quot;</span>));</span><br><span class="line">      objectWrapperFactoryElement(root.evalNode(<span class="string">&quot;objectWrapperFactory&quot;</span>));</span><br><span class="line">      reflectorFactoryElement(root.evalNode(<span class="string">&quot;reflectorFactory&quot;</span>));</span><br><span class="line">      settingsElement(settings);</span><br><span class="line">      <span class="comment">// read it after objectFactory and objectWrapperFactory issue #631</span></span><br><span class="line">      environmentsElement(root.evalNode(<span class="string">&quot;environments&quot;</span>));</span><br><span class="line">      databaseIdProviderElement(root.evalNode(<span class="string">&quot;databaseIdProvider&quot;</span>));</span><br><span class="line">      typeHandlerElement(root.evalNode(<span class="string">&quot;typeHandlers&quot;</span>));</span><br><span class="line">      mapperElement(root.evalNode(<span class="string">&quot;mappers&quot;</span>));</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">BuilderException</span>(<span class="string">&quot;Error parsing SQL Mapper Configuration. Cause: &quot;</span> + e, e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从上面源码中，不难看出这里是解析<code>/configuration</code>中的各个子节点。</p>
+<h4 id="properties-节点解析"><a href="#properties-节点解析" class="headerlink" title="properties 节点解析"></a>properties 节点解析</h4><h5 id="properties配置方式"><a href="#properties配置方式" class="headerlink" title="properties配置方式"></a><code>properties</code>配置方式</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&lt;!-- 方法一 --&gt;</span><br><span class="line">&lt;properties&gt;</span><br><span class="line">    &lt;property name=<span class="string">&quot;username&quot;</span> value=<span class="string">&quot;$&#123;jdbc.username&#125;&quot;</span> /&gt;</span><br><span class="line">&lt;/properties&gt;</span><br><span class="line"></span><br><span class="line">&lt;!-- 方法二 --&gt;</span><br><span class="line">&lt;properties resource=<span class="string">&quot;xxxConfig.properties&quot;</span>&gt;</span><br><span class="line">&lt;/properties&gt;</span><br><span class="line"></span><br><span class="line">&lt;!-- 方法三 --&gt;</span><br><span class="line">&lt;properties url=<span class="string">&quot;file:///D:/xxxConfig.properties&quot;</span>&gt;</span><br><span class="line">&lt;/properties&gt;</span><br></pre></td></tr></table></figure>
+<h5 id="propertiesElement-方法"><a href="#propertiesElement-方法" class="headerlink" title="propertiesElement()方法"></a><code>propertiesElement()</code>方法</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">propertiesElement</span><span class="params">(XNode context)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="keyword">if</span> (context != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="comment">// 获取 propertie 节点，并保存 Properties 中</span></span><br><span class="line">      <span class="type">Properties</span> <span class="variable">defaults</span> <span class="operator">=</span> context.getChildrenAsProperties();</span><br><span class="line">      <span class="comment">// 获取 resource 的值</span></span><br><span class="line">      <span class="type">String</span> <span class="variable">resource</span> <span class="operator">=</span> context.getStringAttribute(<span class="string">&quot;resource&quot;</span>);</span><br><span class="line">      <span class="comment">// 获取 url 的值</span></span><br><span class="line">      <span class="type">String</span> <span class="variable">url</span> <span class="operator">=</span> context.getStringAttribute(<span class="string">&quot;url&quot;</span>);</span><br><span class="line">      <span class="keyword">if</span> (resource != <span class="literal">null</span> &amp;&amp; url != <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">BuilderException</span>(<span class="string">&quot;The properties element cannot specify both a URL and a resource based property file reference.  Please specify one or the other.&quot;</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (resource != <span class="literal">null</span>) &#123;</span><br><span class="line">        defaults.putAll(Resources.getResourceAsProperties(resource));</span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (url != <span class="literal">null</span>) &#123;</span><br><span class="line">        defaults.putAll(Resources.getUrlAsProperties(url));</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="type">Properties</span> <span class="variable">vars</span> <span class="operator">=</span> configuration.getVariables();</span><br><span class="line">      <span class="keyword">if</span> (vars != <span class="literal">null</span>) &#123;</span><br><span class="line">        defaults.putAll(vars);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">// 将解析的值保存到 XPathParser 中</span></span><br><span class="line">      parser.setVariables(defaults);</span><br><span class="line">      <span class="comment">// 将解析的值保存到 Configuration 中</span></span><br><span class="line">      configuration.setVariables(defaults);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从上面源码中，<code>resource</code>和<code>url</code>的配置形式不允许同时存在，否则抛出<code>BuilderException</code>异常。先解析<code>propertie</code>的配置值，再解析<code>resource</code>或<code>url</code>的值。<br>当<code>propertie</code>存在与<code>resource</code>或<code>url</code>相同的<code>key</code>时，<code>propertie</code>的配置会被覆盖，应为<code>Properties</code>实现的原理就是继承的<code>Hashtable</code>类来实现的。</p>
+<h4 id="settings-节点解析"><a href="#settings-节点解析" class="headerlink" title="settings 节点解析"></a>settings 节点解析</h4><h5 id="settings配置方式"><a href="#settings配置方式" class="headerlink" title="settings配置方式"></a><code>settings</code>配置方式</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;settings&gt;</span><br><span class="line">    &lt;setting name=<span class="string">&quot;cacheEnabled&quot;</span> value=<span class="string">&quot;true&quot;</span> /&gt;</span><br><span class="line">    ......</span><br><span class="line">&lt;/settings&gt;</span><br></pre></td></tr></table></figure>
+<p>设置中各项的意图、默认值 <a target="_blank" rel="noopener" href="https://images.ytao.top/settings%E4%B8%AD%E5%90%84%E9%A1%B9%E7%9A%84%E6%84%8F%E5%9B%BE%E3%80%81%E9%BB%98%E8%AE%A4%E5%80%BC.png">图</a>(引用来源：w3cschool)</p>
+<table>
+<thead>
+<tr>
+<th align="left">设置参数</th>
+<th align="center">描述</th>
+<th align="center">有效值</th>
+<th align="center">默认值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">cacheEnabled</td>
+<td align="center">该配置影响的所有映射器中配置的缓存的全局开关。</td>
+<td align="center">true,false</td>
+<td align="center">true</td>
+</tr>
+<tr>
+<td align="left">lazyLoadingEnabled</td>
+<td align="center">延迟加载的全局开关。当开启时，所有关联对象都会延迟加载。 特定关联关系中可通过设置fetchType属性来覆盖该项的开关状态。</td>
+<td align="center">true,false</td>
+<td align="center">false</td>
+</tr>
+<tr>
+<td align="left">aggressiveLazyLoading</td>
+<td align="center">当启用时，对任意延迟属性的调用会使带有延迟加载属性的对象完整加载；反之，每种属性将会按需加载。</td>
+<td align="center">true,false,true</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="left">multipleResultSetsEnabled</td>
+<td align="center">是否允许单一语句返回多结果集（需要兼容驱动）。</td>
+<td align="center">true,false</td>
+<td align="center">true</td>
+</tr>
+<tr>
+<td align="left">useColumnLabel</td>
+<td align="center">使用列标签代替列名。不同的驱动在这方面会有不同的表现， 具体可参考相关驱动文档或通过测试这两种不同的模式来观察所用驱动的结果。</td>
+<td align="center">true,false</td>
+<td align="center">true</td>
+</tr>
+<tr>
+<td align="left">useGeneratedKeys</td>
+<td align="center">允许 JDBC 支持自动生成主键，需要驱动兼容。 如果设置为 true 则这个设置强制使用自动生成主键，尽管一些驱动不能兼容但仍可正常工作（比如 Derby）。</td>
+<td align="center">true,false</td>
+<td align="center">False</td>
+</tr>
+<tr>
+<td align="left">autoMappingBehavior</td>
+<td align="center">指定 MyBatis 应如何自动映射列到字段或属性。 NONE 表示取消自动映射；PARTIAL 只会自动映射没有定义嵌套结果集映射的结果集。 FULL 会自动映射任意复杂的结果集（无论是否嵌套）。</td>
+<td align="center">NONE, PARTIAL, FULL</td>
+<td align="center">PARTIAL</td>
+</tr>
+<tr>
+<td align="left">defaultExecutorType</td>
+<td align="center">配置默认的执行器。SIMPLE 就是普通的执行器；REUSE 执行器会重用预处理语句（prepared statements）； BATCH 执行器将重用语句并执行批量更新。</td>
+<td align="center">SIMPLE REUSE BATCH</td>
+<td align="center">SIMPLE</td>
+</tr>
+<tr>
+<td align="left">defaultStatementTimeout</td>
+<td align="center">设置超时时间，它决定驱动等待数据库响应的秒数。</td>
+<td align="center">Any positive integer</td>
+<td align="center">Not Set (null)</td>
+</tr>
+<tr>
+<td align="left">safeRowBoundsEnabled</td>
+<td align="center">允许在嵌套语句中使用分页（RowBounds）。</td>
+<td align="center">true,false</td>
+<td align="center">False</td>
+</tr>
+<tr>
+<td align="left">mapUnderscoreToCamelCase</td>
+<td align="center">是否开启自动驼峰命名规则（camel case）映射，即从经典数据库列名 A_COLUMN 到经典 Java 属性名 aColumn 的类似映射。</td>
+<td align="center">true, false</td>
+<td align="center">False</td>
+</tr>
+<tr>
+<td align="left">localCacheScope</td>
+<td align="center">MyBatis 利用本地缓存机制（Local Cache）防止循环引用（circular references）和加速重复嵌套查询。 默认值为 SESSION，这种情况下会缓存一个会话中执行的所有查询。 若设置值为 STATEMENT，本地会话仅用在语句执行上，对相同 SqlSession 的不同调用将不会共享数据。</td>
+<td align="center">SESSION,STATEMENT</td>
+<td align="center">SESSION</td>
+</tr>
+<tr>
+<td align="left">jdbcTypeForNull</td>
+<td align="center">当没有为参数提供特定的 JDBC 类型时，为空值指定 JDBC 类型。 某些驱动需要指定列的 JDBC 类型，多数情况直接用一般类型即可，比如 NULL、VARCHAR 或 OTHER。</td>
+<td align="center">JdbcType enumeration. Most common are: NULL, VARCHAR and OTHER</td>
+<td align="center">OTHER</td>
+</tr>
+<tr>
+<td align="left">lazyLoadTriggerMethods</td>
+<td align="center">指定哪个对象的方法触发一次延迟加载。</td>
+<td align="center">A method name list separated by commas</td>
+<td align="center">equals,clone,hashCode,toString</td>
+</tr>
+<tr>
+<td align="left">defaultScriptingLanguage</td>
+<td align="center">指定动态 SQL 生成的默认语言。</td>
+<td align="center">A type alias or fully qualified class name.</td>
+<td align="center">org.apache.ibatis.scripting.xmltags.XMLDynamicLanguageDriver</td>
+</tr>
+<tr>
+<td align="left">callSettersOnNulls</td>
+<td align="center">指定当结果集中值为 null 的时候是否调用映射对象的 setter（map 对象时为 put）方法，这对于有 Map.keySet() 依赖或 null 值初始化的时候是有用的。注意基本类型（int、boolean等）是不能设置成 null 的。</td>
+<td align="center">true,false</td>
+<td align="center">false</td>
+</tr>
+<tr>
+<td align="left">logPrefix</td>
+<td align="center">指定 MyBatis 增加到日志名称的前缀。	Any String</td>
+<td align="center">Not set</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="left">logImpl</td>
+<td align="center">指定 MyBatis 所用日志的具体实现，未指定时将自动查找。</td>
+<td align="center">SLF4J, LOG4J, LOG4J2, JDK_LOGGING, COMMONS_LOGGING, STDOUT_LOGGING, NO_LOGGING</td>
+<td align="center">Not set</td>
+</tr>
+<tr>
+<td align="left">proxyFactory</td>
+<td align="center">指定 Mybatis 创建具有延迟加载能力的对象所用到的代理工具。</td>
+<td align="center">CGLIB JAVASSIST</td>
+<td align="center">CGLIB</td>
+</tr>
+</tbody></table>
+<h5 id="settingsAsProperties-方法"><a href="#settingsAsProperties-方法" class="headerlink" title="settingsAsProperties()方法"></a><code>settingsAsProperties()</code>方法</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Properties <span class="title function_">settingsAsProperties</span><span class="params">(XNode context)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (context == <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Properties</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 获取setting节点的name和value，并保存至Properties返回</span></span><br><span class="line">    <span class="type">Properties</span> <span class="variable">props</span> <span class="operator">=</span> context.getChildrenAsProperties();</span><br><span class="line">    <span class="comment">// Check that all settings are known to the configuration class</span></span><br><span class="line">    <span class="comment">// 创建Configuration的MetaClass</span></span><br><span class="line">    <span class="type">MetaClass</span> <span class="variable">metaConfig</span> <span class="operator">=</span> MetaClass.forClass(Configuration.class, localReflectorFactory);</span><br><span class="line">    <span class="comment">// 校验Configuration中是否有setting设置的name值</span></span><br><span class="line">    <span class="keyword">for</span> (Object key : props.keySet()) &#123;</span><br><span class="line">      <span class="keyword">if</span> (!metaConfig.hasSetter(String.valueOf(key))) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">BuilderException</span>(<span class="string">&quot;The setting &quot;</span> + key + <span class="string">&quot; is not known.  Make sure you spelled it correctly (case sensitive).&quot;</span>);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> props;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里获取到<code>setting</code>的值，并返回<code>Properties</code>对象。然后做配置的<code>name</code>是否合法。<br><code>org.apache.ibatis.reflection.MetaClass</code>类是保存着一个利用反射获取到的类信息，<code>metaConfig.hasSetter(String.valueOf(key))</code>是判断<code>metaConfig</code>对象中是否包含<code>key</code>属性。</p>
+<h5 id="vfsImpl-方法"><a href="#vfsImpl-方法" class="headerlink" title="vfsImpl()方法"></a><code>vfsImpl()</code>方法</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">loadCustomVfs</span><span class="params">(Properties props)</span> <span class="keyword">throws</span> ClassNotFoundException &#123;</span><br><span class="line">      <span class="type">String</span> <span class="variable">value</span> <span class="operator">=</span> props.getProperty(<span class="string">&quot;vfsImpl&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (value != <span class="literal">null</span>) &#123;</span><br><span class="line">      String[] clazzes = value.split(<span class="string">&quot;,&quot;</span>);</span><br><span class="line">      <span class="keyword">for</span> (String clazz : clazzes) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!clazz.isEmpty()) &#123;</span><br><span class="line">          <span class="meta">@SuppressWarnings(&quot;unchecked&quot;)</span></span><br><span class="line">          Class&lt;? <span class="keyword">extends</span> <span class="title class_">VFS</span>&gt; vfsImpl = (Class&lt;? <span class="keyword">extends</span> <span class="title class_">VFS</span>&gt;)Resources.classForName(clazz);</span><br><span class="line">          configuration.setVfsImpl(vfsImpl);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>该方法是解析虚拟文件系统配置，用来加载自定义虚拟文件系统的资源。类保存在<code>Configuration.vfsImpl</code>中。</p>
+<h5 id="settingsElement-方法"><a href="#settingsElement-方法" class="headerlink" title="settingsElement()方法"></a><code>settingsElement()</code>方法</h5><p>这个方法的作用就是将解析的<code>settings</code>设置到 <code>configuration</code>中</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">settingsElement</span><span class="params">(Properties props)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    configuration.setAutoMappingBehavior(AutoMappingBehavior.valueOf(props.getProperty(<span class="string">&quot;autoMappingBehavior&quot;</span>, <span class="string">&quot;PARTIAL&quot;</span>)));</span><br><span class="line">    configuration.setAutoMappingUnknownColumnBehavior(AutoMappingUnknownColumnBehavior.valueOf(props.getProperty(<span class="string">&quot;autoMappingUnknownColumnBehavior&quot;</span>, <span class="string">&quot;NONE&quot;</span>)));</span><br><span class="line">    configuration.setCacheEnabled(booleanValueOf(props.getProperty(<span class="string">&quot;cacheEnabled&quot;</span>), <span class="literal">true</span>));</span><br><span class="line">    configuration.setProxyFactory((ProxyFactory) createInstance(props.getProperty(<span class="string">&quot;proxyFactory&quot;</span>)));</span><br><span class="line">    configuration.setLazyLoadingEnabled(booleanValueOf(props.getProperty(<span class="string">&quot;lazyLoadingEnabled&quot;</span>), <span class="literal">false</span>));</span><br><span class="line">    configuration.setAggressiveLazyLoading(booleanValueOf(props.getProperty(<span class="string">&quot;aggressiveLazyLoading&quot;</span>), <span class="literal">false</span>));</span><br><span class="line">    configuration.setMultipleResultSetsEnabled(booleanValueOf(props.getProperty(<span class="string">&quot;multipleResultSetsEnabled&quot;</span>), <span class="literal">true</span>));</span><br><span class="line">    configuration.setUseColumnLabel(booleanValueOf(props.getProperty(<span class="string">&quot;useColumnLabel&quot;</span>), <span class="literal">true</span>));</span><br><span class="line">    configuration.setUseGeneratedKeys(booleanValueOf(props.getProperty(<span class="string">&quot;useGeneratedKeys&quot;</span>), <span class="literal">false</span>));</span><br><span class="line">    configuration.setDefaultExecutorType(ExecutorType.valueOf(props.getProperty(<span class="string">&quot;defaultExecutorType&quot;</span>, <span class="string">&quot;SIMPLE&quot;</span>)));</span><br><span class="line">    configuration.setDefaultStatementTimeout(integerValueOf(props.getProperty(<span class="string">&quot;defaultStatementTimeout&quot;</span>), <span class="literal">null</span>));</span><br><span class="line">    configuration.setDefaultFetchSize(integerValueOf(props.getProperty(<span class="string">&quot;defaultFetchSize&quot;</span>), <span class="literal">null</span>));</span><br><span class="line">    configuration.setMapUnderscoreToCamelCase(booleanValueOf(props.getProperty(<span class="string">&quot;mapUnderscoreToCamelCase&quot;</span>), <span class="literal">false</span>));</span><br><span class="line">    configuration.setSafeRowBoundsEnabled(booleanValueOf(props.getProperty(<span class="string">&quot;safeRowBoundsEnabled&quot;</span>), <span class="literal">false</span>));</span><br><span class="line">    configuration.setLocalCacheScope(LocalCacheScope.valueOf(props.getProperty(<span class="string">&quot;localCacheScope&quot;</span>, <span class="string">&quot;SESSION&quot;</span>)));</span><br><span class="line">    configuration.setJdbcTypeForNull(JdbcType.valueOf(props.getProperty(<span class="string">&quot;jdbcTypeForNull&quot;</span>, <span class="string">&quot;OTHER&quot;</span>)));</span><br><span class="line">    configuration.setLazyLoadTriggerMethods(stringSetValueOf(props.getProperty(<span class="string">&quot;lazyLoadTriggerMethods&quot;</span>), <span class="string">&quot;equals,clone,hashCode,toString&quot;</span>));</span><br><span class="line">    configuration.setSafeResultHandlerEnabled(booleanValueOf(props.getProperty(<span class="string">&quot;safeResultHandlerEnabled&quot;</span>), <span class="literal">true</span>));</span><br><span class="line">    configuration.setDefaultScriptingLanguage(resolveClass(props.getProperty(<span class="string">&quot;defaultScriptingLanguage&quot;</span>)));</span><br><span class="line">    <span class="meta">@SuppressWarnings(&quot;unchecked&quot;)</span></span><br><span class="line">    Class&lt;? <span class="keyword">extends</span> <span class="title class_">TypeHandler</span>&gt; typeHandler = (Class&lt;? <span class="keyword">extends</span> <span class="title class_">TypeHandler</span>&gt;)resolveClass(props.getProperty(<span class="string">&quot;defaultEnumTypeHandler&quot;</span>));</span><br><span class="line">    configuration.setDefaultEnumTypeHandler(typeHandler);</span><br><span class="line">    configuration.setCallSettersOnNulls(booleanValueOf(props.getProperty(<span class="string">&quot;callSettersOnNulls&quot;</span>), <span class="literal">false</span>));</span><br><span class="line">    configuration.setUseActualParamName(booleanValueOf(props.getProperty(<span class="string">&quot;useActualParamName&quot;</span>), <span class="literal">true</span>));</span><br><span class="line">    configuration.setReturnInstanceForEmptyRow(booleanValueOf(props.getProperty(<span class="string">&quot;returnInstanceForEmptyRow&quot;</span>), <span class="literal">false</span>));</span><br><span class="line">    configuration.setLogPrefix(props.getProperty(<span class="string">&quot;logPrefix&quot;</span>));</span><br><span class="line">    <span class="meta">@SuppressWarnings(&quot;unchecked&quot;)</span></span><br><span class="line">    Class&lt;? <span class="keyword">extends</span> <span class="title class_">Log</span>&gt; logImpl = (Class&lt;? <span class="keyword">extends</span> <span class="title class_">Log</span>&gt;)resolveClass(props.getProperty(<span class="string">&quot;logImpl&quot;</span>));</span><br><span class="line">    configuration.setLogImpl(logImpl);</span><br><span class="line">    configuration.setConfigurationFactory(resolveClass(props.getProperty(<span class="string">&quot;configurationFactory&quot;</span>)));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="typeAliases-节点解析"><a href="#typeAliases-节点解析" class="headerlink" title="typeAliases 节点解析"></a>typeAliases 节点解析</h4><h5 id="typeAliases配置方式"><a href="#typeAliases配置方式" class="headerlink" title="typeAliases配置方式"></a><code>typeAliases</code>配置方式</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;typeAliases&gt;</span><br><span class="line">    &lt;<span class="keyword">package</span> name=<span class="string">&quot;com.ytao.main.model&quot;</span>/&gt;</span><br><span class="line">    <span class="comment">// 或</span></span><br><span class="line">    &lt;typeAlias type=<span class="string">&quot;com.ytao.main.model.Student&quot;</span> alias=<span class="string">&quot;student&quot;</span>/&gt;</span><br><span class="line">    &lt;typeAlias type=<span class="string">&quot;com.ytao.main.model.Person&quot;</span>/&gt;</span><br><span class="line">&lt;/typeAliases&gt;</span><br></pre></td></tr></table></figure>
+<p>该节点是配置类和别名的关系</p>
+<ol>
+<li><code>package</code>节点是配置整个包下的类</li>
+<li><code>typeAlias</code>节点是指定配置单个类，<code>type</code>为必填值且为类全限定名，<code>alias</code>为选填。<br>配置后，是该类时，可直接使用别名。</li>
+</ol>
+<h5 id="typeAliasesElement-方法"><a href="#typeAliasesElement-方法" class="headerlink" title="typeAliasesElement()方法"></a><code>typeAliasesElement()</code>方法</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">typeAliasesElement</span><span class="params">(XNode parent)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (parent != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">for</span> (XNode child : parent.getChildren()) &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="string">&quot;package&quot;</span>.equals(child.getName())) &#123;</span><br><span class="line">          <span class="comment">// 以 package 方式配置</span></span><br><span class="line">          <span class="type">String</span> <span class="variable">typeAliasPackage</span> <span class="operator">=</span> child.getStringAttribute(<span class="string">&quot;name&quot;</span>);</span><br><span class="line">          configuration.getTypeAliasRegistry().registerAliases(typeAliasPackage);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="comment">// 以 alias 方式配置</span></span><br><span class="line">          <span class="type">String</span> <span class="variable">alias</span> <span class="operator">=</span> child.getStringAttribute(<span class="string">&quot;alias&quot;</span>);</span><br><span class="line">          <span class="type">String</span> <span class="variable">type</span> <span class="operator">=</span> child.getStringAttribute(<span class="string">&quot;type&quot;</span>);</span><br><span class="line">          <span class="keyword">try</span> &#123;</span><br><span class="line">            Class&lt;?&gt; clazz = Resources.classForName(type);</span><br><span class="line">            <span class="keyword">if</span> (alias == <span class="literal">null</span>) &#123;</span><br><span class="line">              typeAliasRegistry.registerAlias(clazz);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">              typeAliasRegistry.registerAlias(alias, clazz);</span><br><span class="line">            &#125;</span><br><span class="line">          &#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">BuilderException</span>(<span class="string">&quot;Error registering typeAlias for &#x27;&quot;</span> + alias + <span class="string">&quot;&#x27;. Cause: &quot;</span> + e, e);</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h6 id="使用-package-配置"><a href="#使用-package-配置" class="headerlink" title="使用 package 配置"></a>使用 package 配置</h6><p>当扫描<code>package</code>时，获取到包名后<code>TypeAliasRegistry.registerAliases(typeAliasPackage)</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">registerAliases</span><span class="params">(String packageName)</span>&#123;</span><br><span class="line">    registerAliases(packageName, Object.class);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">registerAliases</span><span class="params">(String packageName, Class&lt;?&gt; superType)</span>&#123;</span><br><span class="line">    ResolverUtil&lt;Class&lt;?&gt;&gt; resolverUtil = <span class="keyword">new</span> <span class="title class_">ResolverUtil</span>&lt;Class&lt;?&gt;&gt;();</span><br><span class="line">    <span class="comment">// 获取 package 下所有已 .class 结尾的文件</span></span><br><span class="line">    resolverUtil.find(<span class="keyword">new</span> <span class="title class_">ResolverUtil</span>.IsA(superType), packageName);</span><br><span class="line">    <span class="comment">// 获取扫描出来的类</span></span><br><span class="line">    Set&lt;Class&lt;? <span class="keyword">extends</span> <span class="title class_">Class</span>&lt;?&gt;&gt;&gt; typeSet = resolverUtil.getClasses();</span><br><span class="line">    <span class="keyword">for</span>(Class&lt;?&gt; type : typeSet)&#123;</span><br><span class="line">      <span class="comment">// Ignore inner classes and interfaces (including package-info.java)</span></span><br><span class="line">      <span class="comment">// Skip also inner classes. See issue #6</span></span><br><span class="line">      <span class="comment">// 过滤类</span></span><br><span class="line">      <span class="keyword">if</span> (!type.isAnonymousClass() &amp;&amp; !type.isInterface() &amp;&amp; !type.isMemberClass()) &#123;</span><br><span class="line">        registerAlias(type);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>扫描到指定<code>package</code>下所有以<code>.class</code>结尾文件的类，并保存至Set集合中，然后遍历集合，过滤掉没有名称，接口，和底层特定类。<br>最后<code>TypeAliasRegistry.registerAlias(Class&lt;?&gt; type)</code>注册到别名注册器中。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">registerAlias</span><span class="params">(Class&lt;?&gt; type)</span> &#123;</span><br><span class="line">    <span class="comment">// 使用类的 simpleName 作为别名，也就是默认的别名命名规则</span></span><br><span class="line">    <span class="type">String</span> <span class="variable">alias</span> <span class="operator">=</span> type.getSimpleName();</span><br><span class="line">    <span class="type">Alias</span> <span class="variable">aliasAnnotation</span> <span class="operator">=</span> type.getAnnotation(Alias.class);</span><br><span class="line">    <span class="keyword">if</span> (aliasAnnotation != <span class="literal">null</span>) &#123;</span><br><span class="line">      alias = aliasAnnotation.value();</span><br><span class="line">    &#125; </span><br><span class="line">    <span class="comment">// 上面分析的最终注册的方法</span></span><br><span class="line">    registerAlias(alias, type);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过类注册到注册器中时，如果该注册类有使用<code>@Alias</code>（<code>org.apache.ibatis.type.Alias</code>）注解，那么XML配置中配置的别名会被注解配置覆盖。</p>
+<h6 id="使用-typeAlias-配置"><a href="#使用-typeAlias-配置" class="headerlink" title="使用 typeAlias 配置"></a>使用 typeAlias 配置</h6><p>如果<code>typeAlias</code>的<code>alias</code>有设置值，使用自定名称方式注册，否则使用默认方式注册，即类的simpleName作为别名。</p>
+<h4 id="plugins-节点解析"><a href="#plugins-节点解析" class="headerlink" title="plugins 节点解析"></a>plugins 节点解析</h4><h5 id="plugins配置方式"><a href="#plugins配置方式" class="headerlink" title="plugins配置方式"></a><code>plugins</code>配置方式</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&lt;plugins&gt;</span><br><span class="line">    <span class="comment">// 配置自定义插件，可指定在某个点进行拦截</span></span><br><span class="line">    &lt;plugin interceptor=<span class="string">&quot;com.ytao.main.plugin.DemoInterceptor&quot;</span>&gt;</span><br><span class="line">        <span class="comment">// 当前插件属性</span></span><br><span class="line">        &lt;property name=<span class="string">&quot;name&quot;</span> value=<span class="string">&quot;100&quot;</span>/&gt;</span><br><span class="line">    &lt;/plugin&gt;</span><br><span class="line">&lt;/plugins&gt;</span><br></pre></td></tr></table></figure>
+<p>自定义插件需要实现<code>org.apache.ibatis.plugin.Interceptor</code>接口,同时在注解上指定拦截的方法。</p>
+<h5 id="pluginElement-方法"><a href="#pluginElement-方法" class="headerlink" title="pluginElement()方法"></a><code>pluginElement()</code>方法</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">pluginElement</span><span class="params">(XNode parent)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="keyword">if</span> (parent != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">for</span> (XNode child : parent.getChildren()) &#123;</span><br><span class="line">        <span class="comment">// 获取自定插件的类名</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">interceptor</span> <span class="operator">=</span> child.getStringAttribute(<span class="string">&quot;interceptor&quot;</span>);</span><br><span class="line">        <span class="comment">// 获取插件属性</span></span><br><span class="line">        <span class="type">Properties</span> <span class="variable">properties</span> <span class="operator">=</span> child.getChildrenAsProperties();</span><br><span class="line">        <span class="comment">// 实例化 Interceptor</span></span><br><span class="line">        <span class="type">Interceptor</span> <span class="variable">interceptorInstance</span> <span class="operator">=</span> (Interceptor) resolveClass(interceptor).newInstance();</span><br><span class="line">        <span class="comment">// 设置插件属性到插件中</span></span><br><span class="line">        interceptorInstance.setProperties(properties);</span><br><span class="line">        <span class="comment">// 将插件保存在 configuration 中</span></span><br><span class="line">        configuration.addInterceptor(interceptorInstance);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里取<code>&lt;plugin&gt;</code>节点的<code>interceptor</code>可以使用别名设置。从源码中<code>resolveClass</code>方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// </span></span><br><span class="line"><span class="keyword">protected</span> Class&lt;?&gt; resolveClass(String alias) &#123;</span><br><span class="line">    <span class="keyword">if</span> (alias == <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> resolveAlias(alias);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">BuilderException</span>(<span class="string">&quot;Error resolving class. Cause: &quot;</span> + e, e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// </span></span><br><span class="line"><span class="keyword">protected</span> Class&lt;?&gt; resolveAlias(String alias) &#123;</span><br><span class="line">    <span class="keyword">return</span> typeAliasRegistry.resolveAlias(alias);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// </span></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; Class&lt;T&gt; <span class="title function_">resolveAlias</span><span class="params">(String string)</span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (string == <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">// issue #748</span></span><br><span class="line">      <span class="comment">// 将传入的 类 名称统一转换</span></span><br><span class="line">      <span class="type">String</span> <span class="variable">key</span> <span class="operator">=</span> string.toLowerCase(Locale.ENGLISH);</span><br><span class="line">      Class&lt;T&gt; value;</span><br><span class="line">      <span class="comment">// 验证别名中是否有当前传入的key</span></span><br><span class="line">      <span class="keyword">if</span> (TYPE_ALIASES.containsKey(key)) &#123;</span><br><span class="line">        value = (Class&lt;T&gt;) TYPE_ALIASES.get(key);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        value = (Class&lt;T&gt;) Resources.classForName(string);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">return</span> value;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">TypeException</span>(<span class="string">&quot;Could not resolve type alias &#x27;&quot;</span> + string + <span class="string">&quot;&#x27;.  Cause: &quot;</span> + e, e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以上源码为别名解析过程，其他别名的解析也是调用此方法，先去保存的别名中去找，是否有别名，如果没有就通过<code>Resources.classForName</code>生成实例。</p>
+<h4 id="objectFactory，objectWrapperFactory，reflectorFactory-节点解析"><a href="#objectFactory，objectWrapperFactory，reflectorFactory-节点解析" class="headerlink" title="objectFactory，objectWrapperFactory，reflectorFactory 节点解析"></a>objectFactory，objectWrapperFactory，reflectorFactory 节点解析</h4><p>以上都是对实现类都是对MyBatis进行扩展。解析方法也类似，最后都是保存在<code>configuration</code>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// objectFactory 解析</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">objectFactoryElement</span><span class="params">(XNode context)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="keyword">if</span> (context != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="type">String</span> <span class="variable">type</span> <span class="operator">=</span> context.getStringAttribute(<span class="string">&quot;type&quot;</span>);</span><br><span class="line">      <span class="type">Properties</span> <span class="variable">properties</span> <span class="operator">=</span> context.getChildrenAsProperties();</span><br><span class="line">      <span class="type">ObjectFactory</span> <span class="variable">factory</span> <span class="operator">=</span> (ObjectFactory) resolveClass(type).newInstance();</span><br><span class="line">      factory.setProperties(properties);</span><br><span class="line">      configuration.setObjectFactory(factory);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// objectWrapperFactory 解析</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">objectWrapperFactoryElement</span><span class="params">(XNode context)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="keyword">if</span> (context != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="type">String</span> <span class="variable">type</span> <span class="operator">=</span> context.getStringAttribute(<span class="string">&quot;type&quot;</span>);</span><br><span class="line">      <span class="type">ObjectWrapperFactory</span> <span class="variable">factory</span> <span class="operator">=</span> (ObjectWrapperFactory) resolveClass(type).newInstance();</span><br><span class="line">      configuration.setObjectWrapperFactory(factory);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// reflectorFactory 解析</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">reflectorFactoryElement</span><span class="params">(XNode context)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="keyword">if</span> (context != <span class="literal">null</span>) &#123;</span><br><span class="line">       <span class="type">String</span> <span class="variable">type</span> <span class="operator">=</span> context.getStringAttribute(<span class="string">&quot;type&quot;</span>);</span><br><span class="line">       <span class="type">ReflectorFactory</span> <span class="variable">factory</span> <span class="operator">=</span> (ReflectorFactory) resolveClass(type).newInstance();</span><br><span class="line">       configuration.setReflectorFactory(factory);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>以上为解析<code>objectFactory，objectWrapperFactory，reflectorFactory</code>源码，经过前面的分析后，这里比较容易看懂。</p>
+<h4 id="environments-节点解析"><a href="#environments-节点解析" class="headerlink" title="environments 节点解析"></a>environments 节点解析</h4><h5 id="environments配置方式"><a href="#environments配置方式" class="headerlink" title="environments配置方式"></a><code>environments</code>配置方式</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">&lt;environments <span class="keyword">default</span>=<span class="string">&quot;development&quot;</span>&gt;</span><br><span class="line">    &lt;environment id=<span class="string">&quot;development&quot;</span>&gt;</span><br><span class="line">        &lt;!-- 事务管理 --&gt;</span><br><span class="line">        &lt;transactionManager type=<span class="string">&quot;JDBC&quot;</span>&gt;</span><br><span class="line">            &lt;property name=<span class="string">&quot;prop&quot;</span> value=<span class="string">&quot;100&quot;</span>/&gt;</span><br><span class="line">        &lt;/transactionManager&gt;</span><br><span class="line">        &lt;!-- 数据源 --&gt;</span><br><span class="line">        &lt;dataSource type=<span class="string">&quot;UNPOOLED&quot;</span>&gt;</span><br><span class="line">            &lt;!-- JDBC 驱动 --&gt;</span><br><span class="line">            &lt;property name=<span class="string">&quot;driver&quot;</span> value=<span class="string">&quot;com.mysql.jdbc.Driver&quot;</span>/&gt;</span><br><span class="line">            &lt;!-- 数据库的 url --&gt;</span><br><span class="line">            &lt;property name=<span class="string">&quot;url&quot;</span> value=<span class="string">&quot;$&#123;jdbc.url&#125;&quot;</span>/&gt;</span><br><span class="line">            &lt;!-- 数据库登录名 --&gt;</span><br><span class="line">            &lt;property name=<span class="string">&quot;username&quot;</span> value=<span class="string">&quot;$&#123;jdbc.username&#125;&quot;</span>/&gt;</span><br><span class="line">            &lt;!-- 数据库登录密码 --&gt;</span><br><span class="line">            &lt;property name=<span class="string">&quot;password&quot;</span> value=<span class="string">&quot;$&#123;jdbc.password&#125;&quot;</span>/&gt;</span><br><span class="line">        &lt;/dataSource&gt;</span><br><span class="line">    &lt;/environment&gt;</span><br><span class="line">    &lt;!-- 一个环境，对应一个environment --&gt;</span><br><span class="line">    ......</span><br><span class="line">&lt;/environments&gt;</span><br></pre></td></tr></table></figure>
+<p>该节点可设置多个环境，针对不同的环境单独配置。<code>environments</code>的属性<code>default</code>是默认环境，该值对应一个<code>environment</code>的属性<code>id</code>的值。</p>
+<ul>
+<li><code>transactionManager</code>为事务管理，属性<code>type</code>为事务管理类型，上面的介绍的<code>new Configuration()</code>有定义类型有：JDBC 和 MANAGED事务管理类型。</li>
+<li><code>dataSource</code>是数据源，<code>type</code>为数据源类型，与<code>transactionManager</code>同理，可知内建的数据源类型有：JNDI，POOLED，UNPOOLED数据源类型。</li>
+</ul>
+<h5 id="environmentsElement-方法"><a href="#environmentsElement-方法" class="headerlink" title="environmentsElement()方法"></a><code>environmentsElement()</code>方法</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">environmentsElement</span><span class="params">(XNode context)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="keyword">if</span> (context != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">if</span> (environment == <span class="literal">null</span>) &#123;</span><br><span class="line">        environment = context.getStringAttribute(<span class="string">&quot;default&quot;</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">for</span> (XNode child : context.getChildren()) &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">id</span> <span class="operator">=</span> child.getStringAttribute(<span class="string">&quot;id&quot;</span>);</span><br><span class="line">        <span class="comment">// 验证 id</span></span><br><span class="line">        <span class="keyword">if</span> (isSpecifiedEnvironment(id)) &#123;</span><br><span class="line">          <span class="comment">// 解析 transactionManager， 并实例化 TransactionFactory</span></span><br><span class="line">          <span class="type">TransactionFactory</span> <span class="variable">txFactory</span> <span class="operator">=</span> transactionManagerElement(child.evalNode(<span class="string">&quot;transactionManager&quot;</span>));</span><br><span class="line">          <span class="comment">// 解析 dataSource，并实例化 DataSourceFactory</span></span><br><span class="line">          <span class="type">DataSourceFactory</span> <span class="variable">dsFactory</span> <span class="operator">=</span> dataSourceElement(child.evalNode(<span class="string">&quot;dataSource&quot;</span>));</span><br><span class="line">          <span class="comment">// 获取 dataSource</span></span><br><span class="line">          <span class="type">DataSource</span> <span class="variable">dataSource</span> <span class="operator">=</span> dsFactory.getDataSource();</span><br><span class="line">          Environment.<span class="type">Builder</span> <span class="variable">environmentBuilder</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Environment</span>.Builder(id)</span><br><span class="line">              .transactionFactory(txFactory)</span><br><span class="line">              .dataSource(dataSource);</span><br><span class="line">          configuration.setEnvironment(environmentBuilder.build());</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="type">boolean</span> <span class="title function_">isSpecifiedEnvironment</span><span class="params">(String id)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (environment == <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">BuilderException</span>(<span class="string">&quot;No environment specified.&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (id == <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">BuilderException</span>(<span class="string">&quot;Environment requires an id attribute.&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (environment.equals(id)) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>若没有配置<code>environment</code>环境或环境没有给<code>id</code>属性，则会抛出异常，若当前<code>id</code>是要使用的就返回<code>true</code>，否则返回<code>false</code>。<br><code>TransactionFactory</code>实例化过程比较简单，与创建<code>DataSourceFactory</code>类似。</p>
+<h5 id="数据源的获取"><a href="#数据源的获取" class="headerlink" title="数据源的获取"></a>数据源的获取</h5><p>获取数据源，首先得创建<code>DataSourceFactory</code>,上面使用<code>DataSourceFactory dsFactory = dataSourceElement(child.evalNode(&quot;dataSource&quot;))</code>创建</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> DataSourceFactory <span class="title function_">dataSourceElement</span><span class="params">(XNode context)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="keyword">if</span> (context != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="type">String</span> <span class="variable">type</span> <span class="operator">=</span> context.getStringAttribute(<span class="string">&quot;type&quot;</span>);</span><br><span class="line">      <span class="type">Properties</span> <span class="variable">props</span> <span class="operator">=</span> context.getChildrenAsProperties();</span><br><span class="line">      <span class="type">DataSourceFactory</span> <span class="variable">factory</span> <span class="operator">=</span> (DataSourceFactory) resolveClass(type).newInstance();</span><br><span class="line">      factory.setProperties(props);</span><br><span class="line">      <span class="keyword">return</span> factory;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">BuilderException</span>(<span class="string">&quot;Environment declaration requires a DataSourceFactory.&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里就是获取到数据源得<code>type</code>后，利用上面所讲到得<code>resolveClass()</code>方法获取到<code>DataSourceFactory</code>。<br>以<code>UNPOOLED</code>为例，对应的<code>DataSourceFactory</code>实现类为<code>UnpooledDataSourceFactory</code>。实例化过程中就给该类的属性<code>dataSource</code>数据源赋值了</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * UnpooledDataSourceFactory 类</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">protected</span> DataSource dataSource;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="title function_">UnpooledDataSourceFactory</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.dataSource = <span class="keyword">new</span> <span class="title class_">UnpooledDataSource</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> DataSource <span class="title function_">getDataSource</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="keyword">return</span> dataSource;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>UnpooledDataSource</code>类里面有静态代码块所以数据源被加载</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * UnpooledDataSource 类</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">static</span> &#123;</span><br><span class="line">    Enumeration&lt;Driver&gt; drivers = DriverManager.getDrivers();</span><br><span class="line">    <span class="keyword">while</span> (drivers.hasMoreElements()) &#123;</span><br><span class="line">      <span class="type">Driver</span> <span class="variable">driver</span> <span class="operator">=</span> drivers.nextElement();</span><br><span class="line">      registeredDrivers.put(driver.getClass().getName(), driver);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="databaseIdProvider-节点解析"><a href="#databaseIdProvider-节点解析" class="headerlink" title="databaseIdProvider 节点解析"></a>databaseIdProvider 节点解析</h4><h5 id="databaseIdProvider配置方式"><a href="#databaseIdProvider配置方式" class="headerlink" title="databaseIdProvider配置方式"></a><code>databaseIdProvider</code>配置方式</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&lt;databaseIdProvider type=<span class="string">&quot;DB_VENDOR&quot;</span>&gt;</span><br><span class="line">    &lt;property name=<span class="string">&quot;SQL Server&quot;</span> value=<span class="string">&quot;sqlserver&quot;</span>/&gt;</span><br><span class="line">    &lt;property name=<span class="string">&quot;DB2&quot;</span> value=<span class="string">&quot;db2&quot;</span>/&gt;</span><br><span class="line">    &lt;property name=<span class="string">&quot;Oracle&quot;</span> value=<span class="string">&quot;oracle&quot;</span> /&gt;</span><br><span class="line">    &lt;property name=<span class="string">&quot;MySQL&quot;</span> value=<span class="string">&quot;mysql&quot;</span>/&gt;</span><br><span class="line">&lt;/databaseIdProvider&gt;</span><br><span class="line"></span><br><span class="line">&lt;select id=<span class="string">&quot;select&quot;</span> resultType=<span class="string">&quot;com.ytao.main.model.Student&quot;</span> databaseId=<span class="string">&quot;mysql&quot;</span>&gt;</span><br><span class="line">    select</span><br><span class="line">      *</span><br><span class="line">    from student</span><br><span class="line">&lt;/select&gt;</span><br></pre></td></tr></table></figure>
+<p>基于映射语句中的<code>databaseId</code>属性，可以根据不同数据库厂商执行不同的sql。</p>
+<h5 id="databaseIdProviderElement-方法"><a href="#databaseIdProviderElement-方法" class="headerlink" title="databaseIdProviderElement()方法"></a><code>databaseIdProviderElement()</code>方法</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">databaseIdProviderElement</span><span class="params">(XNode context)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">  <span class="type">DatabaseIdProvider</span> <span class="variable">databaseIdProvider</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">  <span class="keyword">if</span> (context != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">type</span> <span class="operator">=</span> context.getStringAttribute(<span class="string">&quot;type&quot;</span>);</span><br><span class="line">    <span class="comment">// 保持向后兼容</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="string">&quot;VENDOR&quot;</span>.equals(type)) &#123;</span><br><span class="line">        type = <span class="string">&quot;DB_VENDOR&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">Properties</span> <span class="variable">properties</span> <span class="operator">=</span> context.getChildrenAsProperties();</span><br><span class="line">    databaseIdProvider = (DatabaseIdProvider) resolveClass(type).newInstance();</span><br><span class="line">    databaseIdProvider.setProperties(properties);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="type">Environment</span> <span class="variable">environment</span> <span class="operator">=</span> configuration.getEnvironment();</span><br><span class="line">  <span class="keyword">if</span> (environment != <span class="literal">null</span> &amp;&amp; databaseIdProvider != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">databaseId</span> <span class="operator">=</span> databaseIdProvider.getDatabaseId(environment.getDataSource());</span><br><span class="line">    configuration.setDatabaseId(databaseId);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>根据匹配的数据库厂商类型匹配数据源<code>databaseIdProvider.getDatabaseId(environment.getDataSource())</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">getDatabaseId</span><span class="params">(DataSource dataSource)</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (dataSource == <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">NullPointerException</span>(<span class="string">&quot;dataSource cannot be null&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> getDatabaseName(dataSource);</span><br><span class="line">  &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    log.error(<span class="string">&quot;Could not get a databaseId from dataSource&quot;</span>, e);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> String <span class="title function_">getDatabaseName</span><span class="params">(DataSource dataSource)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">  <span class="comment">// 根据数据源获取数据库产品名称</span></span><br><span class="line">  <span class="type">String</span> <span class="variable">productName</span> <span class="operator">=</span> getDatabaseProductName(dataSource);</span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">this</span>.properties != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (Map.Entry&lt;Object, Object&gt; property : properties.entrySet()) &#123;</span><br><span class="line">      <span class="comment">// 判断是否包含，选择使用的数据库产品</span></span><br><span class="line">      <span class="keyword">if</span> (productName.contains((String) property.getKey())) &#123;</span><br><span class="line">        <span class="keyword">return</span> (String) property.getValue();</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// no match, return null</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> productName;</span><br><span class="line">&#125;</span><br><span class="line">  </span><br><span class="line"><span class="keyword">private</span> String <span class="title function_">getDatabaseProductName</span><span class="params">(DataSource dataSource)</span> <span class="keyword">throws</span> SQLException &#123;</span><br><span class="line">  <span class="type">Connection</span> <span class="variable">con</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">// 数据库连接</span></span><br><span class="line">    con = dataSource.getConnection();</span><br><span class="line">    <span class="comment">// 获取连接元数据</span></span><br><span class="line">    <span class="type">DatabaseMetaData</span> <span class="variable">metaData</span> <span class="operator">=</span> con.getMetaData();</span><br><span class="line">    <span class="comment">// 获取数据库产品名称</span></span><br><span class="line">    <span class="keyword">return</span> metaData.getDatabaseProductName();</span><br><span class="line">  &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (con != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        con.close();</span><br><span class="line">      &#125; <span class="keyword">catch</span> (SQLException e) &#123;</span><br><span class="line">        <span class="comment">// ignored</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;    </span><br></pre></td></tr></table></figure>
+<p>这里需要注意的是配置：比如使用<code>mysql</code>,我踩过这里的坑，这里Name为<code>MySQL</code>,我把<code>y</code>写成大写，结果匹配不上。<br>另外这里写个<code>My</code>也能匹配上，应为是使用的<code>String.contains</code>方法，只要包含就会符合，这里代码应该不够严谨。</p>
+<h4 id="typeHandlers-节点解析"><a href="#typeHandlers-节点解析" class="headerlink" title="typeHandlers 节点解析"></a>typeHandlers 节点解析</h4><h5 id="typeHandlers配置方式"><a href="#typeHandlers配置方式" class="headerlink" title="typeHandlers配置方式"></a><code>typeHandlers</code>配置方式</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;typeHandlers&gt;</span><br><span class="line">    &lt;<span class="keyword">package</span> name=<span class="string">&quot;com.ytao.main.handler&quot;</span>/&gt;</span><br><span class="line">    <span class="comment">// 或</span></span><br><span class="line">    &lt;typeHandler javaType=<span class="string">&quot;java.util.Date&quot;</span>  jdbcType=<span class="string">&quot;TIMESTAMP&quot;</span> handler=<span class="string">&quot;com.ytao.main.handler.DemoDateHandler&quot;</span> /&gt;</span><br><span class="line">&lt;/typeHandlers&gt;</span><br></pre></td></tr></table></figure>
+<p>扫描整个包或者指定类型之间的映射，<code>javaType</code>, <code>jdbcType</code>非必需，<code>handler</code>必填项</p>
+<h5 id="typeHandlerElement-方法"><a href="#typeHandlerElement-方法" class="headerlink" title="typeHandlerElement()方法"></a><code>typeHandlerElement()</code>方法</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">typeHandlerElement</span><span class="params">(XNode parent)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">  <span class="keyword">if</span> (parent != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (XNode child : parent.getChildren()) &#123;</span><br><span class="line">      <span class="keyword">if</span> (<span class="string">&quot;package&quot;</span>.equals(child.getName())) &#123;</span><br><span class="line">        <span class="comment">// 获取包名</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">typeHandlerPackage</span> <span class="operator">=</span> child.getStringAttribute(<span class="string">&quot;name&quot;</span>);</span><br><span class="line">        <span class="comment">// 注册包下所有的类型处理器</span></span><br><span class="line">        typeHandlerRegistry.register(typeHandlerPackage);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">javaTypeName</span> <span class="operator">=</span> child.getStringAttribute(<span class="string">&quot;javaType&quot;</span>);</span><br><span class="line">        <span class="type">String</span> <span class="variable">jdbcTypeName</span> <span class="operator">=</span> child.getStringAttribute(<span class="string">&quot;jdbcType&quot;</span>);</span><br><span class="line">        <span class="type">String</span> <span class="variable">handlerTypeName</span> <span class="operator">=</span> child.getStringAttribute(<span class="string">&quot;handler&quot;</span>);</span><br><span class="line">        Class&lt;?&gt; javaTypeClass = resolveClass(javaTypeName);</span><br><span class="line">        <span class="type">JdbcType</span> <span class="variable">jdbcType</span> <span class="operator">=</span> resolveJdbcType(jdbcTypeName);</span><br><span class="line">        Class&lt;?&gt; typeHandlerClass = resolveClass(handlerTypeName);</span><br><span class="line">        <span class="keyword">if</span> (javaTypeClass != <span class="literal">null</span>) &#123;</span><br><span class="line">          <span class="keyword">if</span> (jdbcType == <span class="literal">null</span>) &#123;</span><br><span class="line">            typeHandlerRegistry.register(javaTypeClass, typeHandlerClass);</span><br><span class="line">          &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            typeHandlerRegistry.register(javaTypeClass, jdbcType, typeHandlerClass);</span><br><span class="line">          &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          typeHandlerRegistry.register(typeHandlerClass);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>源码分析会根据包下所有处理器或者指定处理器进行解析，最后会根据上面分析到的<code>type + handler</code>和<code>type + jdbc type + handler</code>不同情况注册。<br>另外这里还有个<code>TypeHandlerRegistry.register(Class&lt;?&gt; typeHandlerClass)</code>注册类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">register</span><span class="params">(Class&lt;?&gt; typeHandlerClass)</span> &#123;</span><br><span class="line">  <span class="comment">// 标志是否从 MappedTypes 注解中获取 javaType 注册</span></span><br><span class="line">  <span class="type">boolean</span> <span class="variable">mappedTypeFound</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">  <span class="comment">// 获取 MappedTypes 的值</span></span><br><span class="line">  <span class="type">MappedTypes</span> <span class="variable">mappedTypes</span> <span class="operator">=</span> typeHandlerClass.getAnnotation(MappedTypes.class);</span><br><span class="line">  <span class="keyword">if</span> (mappedTypes != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (Class&lt;?&gt; javaTypeClass : mappedTypes.value()) &#123;</span><br><span class="line">      <span class="comment">// 已 type + handler 的方式注册</span></span><br><span class="line">      register(javaTypeClass, typeHandlerClass);</span><br><span class="line">      <span class="comment">// 标志已通过注解注册类型</span></span><br><span class="line">      mappedTypeFound = <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (!mappedTypeFound) &#123;</span><br><span class="line">    <span class="comment">// 通过 TypeHandler 注册</span></span><br><span class="line">    register(getInstance(<span class="literal">null</span>, typeHandlerClass));</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 实例化</span></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; TypeHandler&lt;T&gt; <span class="title function_">getInstance</span><span class="params">(Class&lt;?&gt; javaTypeClass, Class&lt;?&gt; typeHandlerClass)</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (javaTypeClass != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">// 获取有参构造函数</span></span><br><span class="line">      Constructor&lt;?&gt; c = typeHandlerClass.getConstructor(Class.class);</span><br><span class="line">      <span class="comment">// 实例化对象</span></span><br><span class="line">      <span class="keyword">return</span> (TypeHandler&lt;T&gt;) c.newInstance(javaTypeClass);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (NoSuchMethodException ignored) &#123;</span><br><span class="line">      <span class="comment">// ignored</span></span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">TypeException</span>(<span class="string">&quot;Failed invoking constructor for handler &quot;</span> + typeHandlerClass, e);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">// 获取无参构造函数</span></span><br><span class="line">    Constructor&lt;?&gt; c = typeHandlerClass.getConstructor();</span><br><span class="line">    <span class="keyword">return</span> (TypeHandler&lt;T&gt;) c.newInstance();</span><br><span class="line">  &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">TypeException</span>(<span class="string">&quot;Unable to find a usable constructor for &quot;</span> + typeHandlerClass, e);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;  </span><br><span class="line"></span><br><span class="line"><span class="comment">// 注册实例</span></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="keyword">void</span> <span class="title function_">register</span><span class="params">(TypeHandler&lt;T&gt; typeHandler)</span> &#123;</span><br><span class="line">  <span class="type">boolean</span> <span class="variable">mappedTypeFound</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">  <span class="type">MappedTypes</span> <span class="variable">mappedTypes</span> <span class="operator">=</span> typeHandler.getClass().getAnnotation(MappedTypes.class);</span><br><span class="line">  <span class="keyword">if</span> (mappedTypes != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (Class&lt;?&gt; handledType : mappedTypes.value()) &#123;</span><br><span class="line">      register(handledType, typeHandler);</span><br><span class="line">      mappedTypeFound = <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// @since 3.1.0 - try to auto-discover the mapped type</span></span><br><span class="line">  <span class="keyword">if</span> (!mappedTypeFound &amp;&amp; typeHandler <span class="keyword">instanceof</span> TypeReference) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      TypeReference&lt;T&gt; typeReference = (TypeReference&lt;T&gt;) typeHandler;</span><br><span class="line">      register(typeReference.getRawType(), typeHandler);</span><br><span class="line">      mappedTypeFound = <span class="literal">true</span>;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">      <span class="comment">// maybe users define the TypeReference with a different type and are not assignable, so just ignore it</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (!mappedTypeFound) &#123;</span><br><span class="line">    register((Class&lt;T&gt;) <span class="literal">null</span>, typeHandler);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;  </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>以上的<code>register</code>方法中，了解<code>type + jdbc type + handler</code>后，其他的<code>register</code>重载方法比较容易理解，其他的都是基于它上面的封装。</p>
+<h4 id="mappers-节点解析"><a href="#mappers-节点解析" class="headerlink" title="mappers 节点解析"></a>mappers 节点解析</h4><h5 id="mappers配置方式"><a href="#mappers配置方式" class="headerlink" title="mappers配置方式"></a><code>mappers</code>配置方式</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&lt;mappers&gt;</span><br><span class="line">    &lt;<span class="keyword">package</span> name=<span class="string">&quot;com.ytao.main.mapper&quot;</span>/&gt;</span><br><span class="line">    <span class="comment">// 或</span></span><br><span class="line">    &lt;mapper resource=<span class="string">&quot;mapper/studentMapper.xml&quot;</span>/&gt;</span><br><span class="line">    <span class="comment">// 或</span></span><br><span class="line">    &lt;mapper url=<span class="string">&quot;file:///D:/mybatis-3-mybatis-3.4.6/src/main/resources/mapper/studentMapper.xml&quot;</span>/&gt;</span><br><span class="line">    <span class="comment">// 或</span></span><br><span class="line">    &lt;mapper class=<span class="string">&quot;com.ytao.main.mapper.StudentMapper&quot;</span>/&gt;</span><br><span class="line">&lt;/mappers&gt;</span><br></pre></td></tr></table></figure>
+<p>可通过以上四种形式配置<code>mappers</code>节点,<code>&lt;package&gt;</code>和<code>&lt;mapper&gt;</code>为互斥节点。</p>
+<h5 id="mapperElement-方法"><a href="#mapperElement-方法" class="headerlink" title="mapperElement()方法"></a><code>mapperElement()</code>方法</h5><p>该方法是负责解析<code>&lt;mappers&gt;</code>节点</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">mapperElement</span><span class="params">(XNode parent)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">  <span class="keyword">if</span> (parent != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (XNode child : parent.getChildren()) &#123;</span><br><span class="line">      <span class="comment">// 如果配置 package 节点，则扫描</span></span><br><span class="line">      <span class="keyword">if</span> (<span class="string">&quot;package&quot;</span>.equals(child.getName())) &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">mapperPackage</span> <span class="operator">=</span> child.getStringAttribute(<span class="string">&quot;name&quot;</span>);</span><br><span class="line">        <span class="comment">// 解析包下类Mapper接口，并注册到configuration的mapperRegistry中</span></span><br><span class="line">        configuration.addMappers(mapperPackage);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 获取mapper节点的resource,url,class属性</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">resource</span> <span class="operator">=</span> child.getStringAttribute(<span class="string">&quot;resource&quot;</span>);</span><br><span class="line">        <span class="type">String</span> <span class="variable">url</span> <span class="operator">=</span> child.getStringAttribute(<span class="string">&quot;url&quot;</span>);</span><br><span class="line">        <span class="type">String</span> <span class="variable">mapperClass</span> <span class="operator">=</span> child.getStringAttribute(<span class="string">&quot;class&quot;</span>);</span><br><span class="line">        <span class="comment">// 根据resource解析，并且url，class值必须为空，也就不能配置值。url，class同理，其它两个属性也不能配置值</span></span><br><span class="line">        <span class="keyword">if</span> (resource != <span class="literal">null</span> &amp;&amp; url == <span class="literal">null</span> &amp;&amp; mapperClass == <span class="literal">null</span>) &#123;</span><br><span class="line">          ErrorContext.instance().resource(resource);</span><br><span class="line">          <span class="comment">// 通过resource获取流</span></span><br><span class="line">          <span class="type">InputStream</span> <span class="variable">inputStream</span> <span class="operator">=</span> Resources.getResourceAsStream(resource);</span><br><span class="line">          <span class="comment">// 创建XMLMapperBuilder对象</span></span><br><span class="line">          <span class="type">XMLMapperBuilder</span> <span class="variable">mapperParser</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">XMLMapperBuilder</span>(inputStream, configuration, resource, configuration.getSqlFragments());</span><br><span class="line">          <span class="comment">// 解析映射配置文件</span></span><br><span class="line">          mapperParser.parse();</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (resource == <span class="literal">null</span> &amp;&amp; url != <span class="literal">null</span> &amp;&amp; mapperClass == <span class="literal">null</span>) &#123;</span><br><span class="line">          ErrorContext.instance().resource(url);</span><br><span class="line">          <span class="comment">// 通过url获取流</span></span><br><span class="line">          <span class="type">InputStream</span> <span class="variable">inputStream</span> <span class="operator">=</span> Resources.getUrlAsStream(url);</span><br><span class="line">          <span class="comment">// 和resource解析方式一样，创建XMLMapperBuilder对象，然后解析映射配置文件</span></span><br><span class="line">          <span class="type">XMLMapperBuilder</span> <span class="variable">mapperParser</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">XMLMapperBuilder</span>(inputStream, configuration, url, configuration.getSqlFragments());</span><br><span class="line">          mapperParser.parse();</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (resource == <span class="literal">null</span> &amp;&amp; url == <span class="literal">null</span> &amp;&amp; mapperClass != <span class="literal">null</span>) &#123;</span><br><span class="line">          <span class="comment">// 加载class属性的接口</span></span><br><span class="line">          Class&lt;?&gt; mapperInterface = Resources.classForName(mapperClass);</span><br><span class="line">          <span class="comment">// 将接口注册到configuration的mapperRegistry中</span></span><br><span class="line">          configuration.addMapper(mapperInterface);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">BuilderException</span>(<span class="string">&quot;A mapper element may only specify a url, resource or class, but not more than one.&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>&lt;package&gt;</code>的包扫描到的类，然后单个单个注册到configuration的mapperRegistry中，这里和<code>&lt;mapper&gt;</code>使用<code>class</code>属性是一样逻辑。<br>解析<code>package</code>方式</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Configuration 中定义了</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">final</span> <span class="type">MapperRegistry</span> <span class="variable">mapperRegistry</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">MapperRegistry</span>(<span class="built_in">this</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 步骤一</span></span><br><span class="line"><span class="comment"> * 该函数于 Configuration 中  </span></span><br><span class="line"><span class="comment"> */</span>  </span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addMappers</span><span class="params">(String packageName)</span> &#123;</span><br><span class="line">  <span class="comment">// mapperRegistry定义在Configuration中的一个属性</span></span><br><span class="line">  mapperRegistry.addMappers(packageName);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 步骤二</span></span><br><span class="line"><span class="comment"> * 该函数于 MapperRegistry 中  </span></span><br><span class="line"><span class="comment"> */</span>   </span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addMappers</span><span class="params">(String packageName)</span> &#123;</span><br><span class="line">  addMappers(packageName, Object.class);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 步骤三</span></span><br><span class="line"><span class="comment"> * 该函数于 MapperRegistry 中  </span></span><br><span class="line"><span class="comment"> */</span>       </span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addMappers</span><span class="params">(String packageName, Class&lt;?&gt; superType)</span> &#123;</span><br><span class="line">  <span class="comment">// 通过 ResolverUtil 获取包下的类</span></span><br><span class="line">  ResolverUtil&lt;Class&lt;?&gt;&gt; resolverUtil = <span class="keyword">new</span> <span class="title class_">ResolverUtil</span>&lt;Class&lt;?&gt;&gt;();</span><br><span class="line">  resolverUtil.find(<span class="keyword">new</span> <span class="title class_">ResolverUtil</span>.IsA(superType), packageName);</span><br><span class="line">  Set&lt;Class&lt;? <span class="keyword">extends</span> <span class="title class_">Class</span>&lt;?&gt;&gt;&gt; mapperSet = resolverUtil.getClasses();</span><br><span class="line">  <span class="keyword">for</span> (Class&lt;?&gt; mapperClass : mapperSet) &#123;</span><br><span class="line">    <span class="comment">// 遍历获取到的类，注册到 MapperRegistry</span></span><br><span class="line">    addMapper(mapperClass);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;   </span><br><span class="line"> </span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 步骤四</span></span><br><span class="line"><span class="comment"> * 该函数于 MapperRegistry 中</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="keyword">void</span> <span class="title function_">addMapper</span><span class="params">(Class&lt;T&gt; type)</span> &#123;</span><br><span class="line">  <span class="comment">// mapper 类为 interface 接口</span></span><br><span class="line">  <span class="keyword">if</span> (type.isInterface()) &#123;</span><br><span class="line">    <span class="comment">// 判断当前class是否已经注册过</span></span><br><span class="line">    <span class="keyword">if</span> (hasMapper(type)) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">BindingException</span>(<span class="string">&quot;Type &quot;</span> + type + <span class="string">&quot; is already known to the MapperRegistry.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 校验是否加载完成</span></span><br><span class="line">    <span class="type">boolean</span> <span class="variable">loadCompleted</span> <span class="operator">=</span> <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">// 保存 mapper 接口和 MapperProxyFactory 之间的映射</span></span><br><span class="line">      knownMappers.put(type, <span class="keyword">new</span> <span class="title class_">MapperProxyFactory</span>&lt;T&gt;(type));</span><br><span class="line">      <span class="comment">// It&#x27;s important that the type is added before the parser is run</span></span><br><span class="line">      <span class="comment">// otherwise the binding may automatically be attempted by the</span></span><br><span class="line">      <span class="comment">// mapper parser. If the type is already known, it won&#x27;t try.</span></span><br><span class="line">      <span class="comment">// 解析xml和注解</span></span><br><span class="line">      <span class="type">MapperAnnotationBuilder</span> <span class="variable">parser</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">MapperAnnotationBuilder</span>(config, type);</span><br><span class="line">      parser.parse();</span><br><span class="line">      <span class="comment">// 标志加载完成</span></span><br><span class="line">      loadCompleted = <span class="literal">true</span>;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (!loadCompleted) &#123;</span><br><span class="line">        knownMappers.remove(type);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;   </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>解析<code>mapper</code>的<code>class</code>属性</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 该函数于 Configuration 中  </span></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="keyword">void</span> <span class="title function_">addMapper</span><span class="params">(Class&lt;T&gt; type)</span> &#123;</span><br><span class="line">  mapperRegistry.addMapper(type);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ... 这里调用上面的【步骤四】</span></span><br></pre></td></tr></table></figure>
+<p>这两中方式是直接注册接口到<code>mapperRegistry</code>,另外两种是解析<code>xml</code>的方式就是获取映射文件的<code>namespace</code>，再注册进来,<code>XMLMapperBuilder</code>是负责解析映射配置文件的类，今后会单独详细分析这个类，这里不展开讲。</p>
+<blockquote>
+<p>这里对XMLConfigBuilder解析配置文件到此分析完，本文对配置文件解析的流程大致了解流程和原理。相信遇到配置问题异常，大致能排查到根本原因。</p>
+</blockquote>
+
+      
+    </div>
+    
+    
+    
+
+    
+      <div>
+        <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://yangtao.ytao.top/ytao%E5%85%AC%E4%BC%97%E5%8F%B7.jpg" alt=" wechat" style="width: 200px; max-width: 100%;"/>
+    <div>我的公众号</div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>原创技术分享，感谢您的鼓励！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span><!-- Donate -->赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="https://yangtao.ytao.top/wechatpay.png" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="https://yangtao.ytao.top/alipay.jpg" alt=" Alipay"/>
+        <p>Alipay</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/MyBatis/" rel="tag"># MyBatis</a>
+          
+            <a href="/tags/%E6%BA%90%E7%A0%81/" rel="tag"># 源码</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/22/1_mybatis%E4%B9%8B%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90%EF%BC%88%E4%B8%80%EF%BC%89/" rel="next" title="MyBatis之启动分析（一）">
+                <i class="fa fa-chevron-left"></i> MyBatis之启动分析（一）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/10/18/3_Java%E8%AF%8A%E6%96%AD%E5%88%A9%E5%99%A8Arthas%E4%BC%98%E9%9B%85%E6%8E%92%E6%9F%A5%E7%94%9F%E4%BA%A7%E7%8E%AF%E5%A2%83/" rel="prev" title="Java诊断利器Arthas优雅排查生产环境">
+                Java诊断利器Arthas优雅排查生产环境 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+          <div class="post-spread">
+            
+          </div>
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="https://yangtao.ytao.top/ytao-about_1.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name">
+               
+              <!-- 
+              <br>
+              杨&nbsp;滔 
+              -->
+              <br>
+              原创技术博客
+              </p>
+              <p class="site-description motion-element" itemprop="description">
+              路漫漫其修远兮，吾将上下而求索
+              <!-- 
+              
+              -->
+              </p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="/links/" target="_blank" title="Links">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Links</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E4%BE%8B%E5%8C%96XMLConfigBuilder%E5%AF%B9%E8%B1%A1%E3%80%82"><span class="nav-number">2.1.</span> <span class="nav-text">实例化XMLConfigBuilder对象。</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9E%E4%BE%8B%E5%8C%96Configuration"><span class="nav-number">2.1.1.</span> <span class="nav-text">实例化Configuration</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B0%83%E7%94%A8%E7%88%B6%E7%B1%BBBaseBuilder%E7%9A%84%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95"><span class="nav-number">2.1.2.</span> <span class="nav-text">调用父类BaseBuilder的构造方法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B0%83%E7%94%A8-XMLConfigBuilder-parse-%E4%BD%9C%E4%B8%BA%E8%A7%A3%E6%9E%90%E5%85%A5%E5%8F%A3%E3%80%82"><span class="nav-number">2.2.</span> <span class="nav-text">调用 XMLConfigBuilder.parse() 作为解析入口。</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#properties-%E8%8A%82%E7%82%B9%E8%A7%A3%E6%9E%90"><span class="nav-number">2.2.1.</span> <span class="nav-text">properties 节点解析</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#properties%E9%85%8D%E7%BD%AE%E6%96%B9%E5%BC%8F"><span class="nav-number">2.2.1.1.</span> <span class="nav-text">properties配置方式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#propertiesElement-%E6%96%B9%E6%B3%95"><span class="nav-number">2.2.1.2.</span> <span class="nav-text">propertiesElement()方法</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#settings-%E8%8A%82%E7%82%B9%E8%A7%A3%E6%9E%90"><span class="nav-number">2.2.2.</span> <span class="nav-text">settings 节点解析</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#settings%E9%85%8D%E7%BD%AE%E6%96%B9%E5%BC%8F"><span class="nav-number">2.2.2.1.</span> <span class="nav-text">settings配置方式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#settingsAsProperties-%E6%96%B9%E6%B3%95"><span class="nav-number">2.2.2.2.</span> <span class="nav-text">settingsAsProperties()方法</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#vfsImpl-%E6%96%B9%E6%B3%95"><span class="nav-number">2.2.2.3.</span> <span class="nav-text">vfsImpl()方法</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#settingsElement-%E6%96%B9%E6%B3%95"><span class="nav-number">2.2.2.4.</span> <span class="nav-text">settingsElement()方法</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#typeAliases-%E8%8A%82%E7%82%B9%E8%A7%A3%E6%9E%90"><span class="nav-number">2.2.3.</span> <span class="nav-text">typeAliases 节点解析</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#typeAliases%E9%85%8D%E7%BD%AE%E6%96%B9%E5%BC%8F"><span class="nav-number">2.2.3.1.</span> <span class="nav-text">typeAliases配置方式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#typeAliasesElement-%E6%96%B9%E6%B3%95"><span class="nav-number">2.2.3.2.</span> <span class="nav-text">typeAliasesElement()方法</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-package-%E9%85%8D%E7%BD%AE"><span class="nav-number">2.2.3.2.1.</span> <span class="nav-text">使用 package 配置</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-typeAlias-%E9%85%8D%E7%BD%AE"><span class="nav-number">2.2.3.2.2.</span> <span class="nav-text">使用 typeAlias 配置</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#plugins-%E8%8A%82%E7%82%B9%E8%A7%A3%E6%9E%90"><span class="nav-number">2.2.4.</span> <span class="nav-text">plugins 节点解析</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#plugins%E9%85%8D%E7%BD%AE%E6%96%B9%E5%BC%8F"><span class="nav-number">2.2.4.1.</span> <span class="nav-text">plugins配置方式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#pluginElement-%E6%96%B9%E6%B3%95"><span class="nav-number">2.2.4.2.</span> <span class="nav-text">pluginElement()方法</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#objectFactory%EF%BC%8CobjectWrapperFactory%EF%BC%8CreflectorFactory-%E8%8A%82%E7%82%B9%E8%A7%A3%E6%9E%90"><span class="nav-number">2.2.5.</span> <span class="nav-text">objectFactory，objectWrapperFactory，reflectorFactory 节点解析</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#environments-%E8%8A%82%E7%82%B9%E8%A7%A3%E6%9E%90"><span class="nav-number">2.2.6.</span> <span class="nav-text">environments 节点解析</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#environments%E9%85%8D%E7%BD%AE%E6%96%B9%E5%BC%8F"><span class="nav-number">2.2.6.1.</span> <span class="nav-text">environments配置方式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#environmentsElement-%E6%96%B9%E6%B3%95"><span class="nav-number">2.2.6.2.</span> <span class="nav-text">environmentsElement()方法</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E6%BA%90%E7%9A%84%E8%8E%B7%E5%8F%96"><span class="nav-number">2.2.6.3.</span> <span class="nav-text">数据源的获取</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#databaseIdProvider-%E8%8A%82%E7%82%B9%E8%A7%A3%E6%9E%90"><span class="nav-number">2.2.7.</span> <span class="nav-text">databaseIdProvider 节点解析</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#databaseIdProvider%E9%85%8D%E7%BD%AE%E6%96%B9%E5%BC%8F"><span class="nav-number">2.2.7.1.</span> <span class="nav-text">databaseIdProvider配置方式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#databaseIdProviderElement-%E6%96%B9%E6%B3%95"><span class="nav-number">2.2.7.2.</span> <span class="nav-text">databaseIdProviderElement()方法</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#typeHandlers-%E8%8A%82%E7%82%B9%E8%A7%A3%E6%9E%90"><span class="nav-number">2.2.8.</span> <span class="nav-text">typeHandlers 节点解析</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#typeHandlers%E9%85%8D%E7%BD%AE%E6%96%B9%E5%BC%8F"><span class="nav-number">2.2.8.1.</span> <span class="nav-text">typeHandlers配置方式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#typeHandlerElement-%E6%96%B9%E6%B3%95"><span class="nav-number">2.2.8.2.</span> <span class="nav-text">typeHandlerElement()方法</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#mappers-%E8%8A%82%E7%82%B9%E8%A7%A3%E6%9E%90"><span class="nav-number">2.2.9.</span> <span class="nav-text">mappers 节点解析</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#mappers%E9%85%8D%E7%BD%AE%E6%96%B9%E5%BC%8F"><span class="nav-number">2.2.9.1.</span> <span class="nav-text">mappers配置方式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#mapperElement-%E6%96%B9%E6%B3%95"><span class="nav-number">2.2.9.2.</span> <span class="nav-text">mapperElement()方法</span></a></li></ol></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yang Tao</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+<!-- 访问统计 -->
+
+    <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span id="busuanzi_container_site_pv">本站总访问量<span id="busuanzi_value_site_pv"></span>次</span>
+    <span class="post-meta-divider">|</span>
+    <span id="busuanzi_container_site_uv">本站访客数<span id="busuanzi_value_site_uv"></span>人</span>
+
+
+<!-- 备案号 -->
+<p>
+	<a class="beian" style="font-size:12px; color:gray; border-bottom: none;" href="https://beian.miit.gov.cn" target="_blank">
+    粤ICP备19117800号
+	</a>
+</p>
+
+
+<script src="https://my.openwrite.cn/js/readmore.js" type="text/javascript"></script>
+<script>
+    const btw = new BTWPlugin();
+    btw.init({
+        id: 'owContent',
+        blogId: '15390-1575515911767-844',
+        name: '『ytao』',
+        qrcode: 'http://yangtao.ytao.top/ytao%E5%85%AC%E4%BC%97%E5%8F%B7.jpg',
+        keyword: 'ytao',
+    });
+</script>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+  <script type="text/javascript" src="/js/src/exturl.js?v=5.1.4"></script>
+
+
+</body>
+</html>

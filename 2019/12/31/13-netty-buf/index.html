@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh_CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Netty," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="ytao's blog" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="上篇介绍了 ByteBuf 的简单读写操作以及读写指针的基本介绍，本文继续对 ByteBuf 的基本操作进行解读。  读写指针回滚这里的 demo 例子还是使用上节使用的。 12345678ByteBuf buf &#x3D; Unpooled.buffer(15);String content &#x3D; &quot;ytao公众号&quot;;buf.writeBytes(content.getBytes(">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Netty之缓冲区ByteBuf解读（二）">
+<meta property="og:url" content="https://ytao.top/2019/12/31/13-netty-buf/index.html">
+<meta property="og:site_name" content="ytao&#39;s blog">
+<meta property="og:description" content="上篇介绍了 ByteBuf 的简单读写操作以及读写指针的基本介绍，本文继续对 ByteBuf 的基本操作进行解读。  读写指针回滚这里的 demo 例子还是使用上节使用的。 12345678ByteBuf buf &#x3D; Unpooled.buffer(15);String content &#x3D; &quot;ytao公众号&quot;;buf.writeBytes(content.getBytes(">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://images.ytao.top/banner-13.jpg">
+<meta property="og:image" content="https://images.ytao.top/bytebuf-readbytes.png">
+<meta property="og:image" content="https://images.ytao.top/bytebuf-mark-reset-read.png">
+<meta property="og:image" content="https://images.ytao.top/bytebuf-mark-method.png">
+<meta property="og:image" content="https://images.ytao.top/bytebuf-reset-method.png">
+<meta property="og:image" content="https://images.ytao.top/bytebuf-clear.png">
+<meta property="og:image" content="https://images.ytao.top/bytebuf-clear-method.png">
+<meta property="og:image" content="https://images.ytao.top/bytebuf-search-indexOf.png">
+<meta property="og:image" content="https://images.ytao.top/bytebuf-bytesBefore-list.png">
+<meta property="og:image" content="https://images.ytao.top/bytebuf-forEachByte-list.png">
+<meta property="og:image" content="https://images.ytao.top/bytebuf-forEachByteDesc-list.png">
+<meta property="og:image" content="https://images.ytao.top/bytebuf-copy-1.png">
+<meta property="article:published_time" content="2019-12-30T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-10-10T14:18:14.206Z">
+<meta property="article:author" content="Yang Tao">
+<meta property="article:tag" content="Netty">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.ytao.top/banner-13.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+<!-- 百度统计代码获取 -->
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?3887053ae7b22ae6e4c1ba814b74f794";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+<!-- 百度自动推送链接 -->
+<script>
+  (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      if (curProtocol === 'https') {
+          bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+      }
+      else {
+          bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+      }
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+  })();
+</script>
+
+
+
+
+  <link rel="canonical" href="https://ytao.top/2019/12/31/13-netty-buf/"/>
+
+
+
+
+
+  <title>Netty之缓冲区ByteBuf解读（二） | ytao's blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh_CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ytao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    <!-- 文章里设置公众号导流 -->
+    <div id="owContent">
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://ytao.top/2019/12/31/13-netty-buf/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://yangtao.ytao.top/ytao-about_1.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ytao's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Netty之缓冲区ByteBuf解读（二）</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-31T00:00:00+08:00">
+                2019-12-31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Netty/" itemprop="url" rel="index">
+                    <span itemprop="name">Netty</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-eye"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="https://images.ytao.top/banner-13.jpg"></p>
+<blockquote>
+<p>上篇介绍了 ByteBuf 的简单读写操作以及读写指针的基本介绍，本文继续对 ByteBuf 的基本操作进行解读。</p>
+</blockquote>
+<h1 id="读写指针回滚"><a href="#读写指针回滚" class="headerlink" title="读写指针回滚"></a>读写指针回滚</h1><p>这里的 demo 例子还是使用上节使用的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ByteBuf</span> <span class="variable">buf</span> <span class="operator">=</span> Unpooled.buffer(<span class="number">15</span>);</span><br><span class="line"><span class="type">String</span> <span class="variable">content</span> <span class="operator">=</span> <span class="string">&quot;ytao公众号&quot;</span>;</span><br><span class="line">buf.writeBytes(content.getBytes());</span><br><span class="line">System.out.println(String.format(<span class="string">&quot;\nwrite: ridx=%s widx=%s cap=%s&quot;</span>, buf.readerIndex(), buf.writerIndex(), buf.capacity()));</span><br><span class="line"></span><br><span class="line"><span class="type">byte</span>[] dst = <span class="keyword">new</span> <span class="title class_">byte</span>[<span class="number">4</span>];</span><br><span class="line">buf.readBytes(dst);</span><br><span class="line">System.out.println(String.format(<span class="string">&quot;\nread(4): ridx=%s widx=%s cap=%s&quot;</span>, buf.readerIndex(), buf.writerIndex(), buf.capacity()));</span><br></pre></td></tr></table></figure>
+
+<span id="more"></span>
+
+<p>进入 readBytes 方法，可以看到每次读取的时候，指针是累加的，如图：</p>
+<p><img src="https://images.ytao.top/bytebuf-readbytes.png"></p>
+<p>但是，有时我们可能需要对当前操作进行回滚，让指针回到之前的位置。这时，mark 和 reset 搭配使用，可以实现该操作需求。<br>mark 用来记录可能需要回滚的当前位置，reset 是将指针回滚至 mark 记录的值。<br>比如，接着面的 demo，再读取三个字节，然后回滚读取三个字节的操作。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">buf.markReaderIndex();</span><br><span class="line">dst = <span class="keyword">new</span> <span class="title class_">byte</span>[<span class="number">3</span>];</span><br><span class="line">buf.readBytes(dst);</span><br><span class="line">System.out.println(String.format(<span class="string">&quot;\nmarkRead and read(3): ridx=%s widx=%s cap=%s&quot;</span>, buf.readerIndex(), buf.writerIndex(), buf.capacity()));</span><br><span class="line"></span><br><span class="line">buf.resetReaderIndex();</span><br><span class="line">System.out.println(String.format(<span class="string">&quot;\nresetReaderIndex: ridx=%s widx=%s cap=%s&quot;</span>, buf.readerIndex(), buf.writerIndex(), buf.capacity()));</span><br></pre></td></tr></table></figure>
+
+<p>先将读索引进行 mark，然后读取内容，在调用读取的 reset，指针索引如下：</p>
+<p><img src="https://images.ytao.top/bytebuf-mark-reset-read.png"></p>
+<p>读指针累加到 7 后，又重新回滚至 4 的位置。</p>
+<p>同样，写指针也是如此操作进行回滚。所以 mark 和 reset 都有一个读和写。</p>
+<p><img src="https://images.ytao.top/bytebuf-mark-method.png"></p>
+<p>以及</p>
+<p><img src="https://images.ytao.top/bytebuf-reset-method.png"></p>
+<h1 id="读写指针清空"><a href="#读写指针清空" class="headerlink" title="读写指针清空"></a>读写指针清空</h1><p>将读写指针清为初始值，使用 clear() 函数。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ByteBuf</span> <span class="variable">buf</span> <span class="operator">=</span> Unpooled.buffer(<span class="number">15</span>);</span><br><span class="line"><span class="type">String</span> <span class="variable">content</span> <span class="operator">=</span> <span class="string">&quot;ytao公众号&quot;</span>;</span><br><span class="line">buf.writeBytes(content.getBytes());</span><br><span class="line">System.out.println(String.format(<span class="string">&quot;\nwrite: ridx=%s widx=%s cap=%s&quot;</span>, buf.readerIndex(), buf.writerIndex(), buf.capacity()));</span><br><span class="line">buf.markWriterIndex();</span><br><span class="line"></span><br><span class="line"><span class="type">byte</span>[] dst = <span class="keyword">new</span> <span class="title class_">byte</span>[<span class="number">4</span>];</span><br><span class="line">buf.readBytes(dst);</span><br><span class="line">System.out.println(String.format(<span class="string">&quot;\nread(4): ridx=%s widx=%s cap=%s&quot;</span>, buf.readerIndex(), buf.writerIndex(), buf.capacity()));</span><br><span class="line">buf.markReaderIndex();</span><br><span class="line"></span><br><span class="line">buf.clear();</span><br><span class="line">System.out.println(String.format(<span class="string">&quot;\nclear: ridx=%s widx=%s cap=%s&quot;</span>, buf.readerIndex(), buf.writerIndex(), buf.capacity()));</span><br></pre></td></tr></table></figure>
+
+<p>执行结果：</p>
+<p><img src="https://images.ytao.top/bytebuf-clear.png"></p>
+<p>clear 只会将指针的位置重置为初始值，并不会清空缓冲区里的内容，如下图。同时，也可使用 mark 和 reset 进行验证，这里不再进行演示。</p>
+<p><img src="https://images.ytao.top/bytebuf-clear-method.png"></p>
+<h1 id="查找字符位置"><a href="#查找字符位置" class="headerlink" title="查找字符位置"></a>查找字符位置</h1><p>查找字符是在很多场景下，都会使用到，比如前面文章讲过的粘包&#x2F;拆包处理，就有根据字符串进行划分包数据。其实现原理就是根据查找指定字符进行读取。<br>ByteBuf 也提供多种不同的查找方法进行处理：</p>
+<h2 id="indexOf"><a href="#indexOf" class="headerlink" title="indexOf"></a>indexOf</h2><p>indexOf 函数，拥有三个参数，查找开始位置索引 <code>fromIndex</code>， 查询位置最大的索引 <code>toIndex</code>，查找字节 <code>value</code>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// fromIndex 为 0， toIndex 为 13， value 为 a</span></span><br><span class="line"><span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> buf.indexOf(<span class="number">0</span>, <span class="number">13</span>, (<span class="type">byte</span>)<span class="string">&#x27;a&#x27;</span>);</span><br><span class="line">System.out.println(<span class="string">&quot;[a]索引位置：&quot;</span>+i);</span><br></pre></td></tr></table></figure>
+
+<p>在索引 0~13 中返回查找的字符 a 索引位置：</p>
+<p><img src="https://images.ytao.top/bytebuf-search-indexOf.png"></p>
+<p>indexOf 源码实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ByteBuf 实现类</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">indexOf</span><span class="params">(<span class="type">int</span> fromIndex, <span class="type">int</span> toIndex, <span class="type">byte</span> value)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> ByteBufUtil.indexOf(<span class="built_in">this</span>, fromIndex, toIndex, value);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ByteBufUtil 类</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="type">int</span> <span class="title function_">indexOf</span><span class="params">(ByteBuf buffer, <span class="type">int</span> fromIndex, <span class="type">int</span> toIndex, <span class="type">byte</span> value)</span> &#123;</span><br><span class="line">    <span class="comment">// 判断查询起始和终点索引大小</span></span><br><span class="line">    <span class="keyword">if</span> (fromIndex &lt;= toIndex) &#123;</span><br><span class="line">        <span class="keyword">return</span> firstIndexOf(buffer, fromIndex, toIndex, value);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> lastIndexOf(buffer, fromIndex, toIndex, value);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="type">int</span> <span class="title function_">firstIndexOf</span><span class="params">(ByteBuf buffer, <span class="type">int</span> fromIndex, <span class="type">int</span> toIndex, <span class="type">byte</span> value)</span> &#123;</span><br><span class="line">    fromIndex = Math.max(fromIndex, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">if</span> (fromIndex &gt;= toIndex || buffer.capacity() == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 从起始索引进行遍历到终点索引，如果这区间有查找的字节，就返回第一个字节的位置，否则返回 -1</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> fromIndex; i &lt; toIndex; i ++) &#123;</span><br><span class="line">        <span class="keyword">if</span> (buffer.getByte(i) == value) &#123;</span><br><span class="line">            <span class="keyword">return</span> i;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="type">int</span> <span class="title function_">lastIndexOf</span><span class="params">(ByteBuf buffer, <span class="type">int</span> fromIndex, <span class="type">int</span> toIndex, <span class="type">byte</span> value)</span> &#123;</span><br><span class="line">    fromIndex = Math.min(fromIndex, buffer.capacity());</span><br><span class="line">    <span class="keyword">if</span> (fromIndex &lt; <span class="number">0</span> || buffer.capacity() == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//  从起始索引进行遍历到终点索引倒着遍历，获取的是查找区间的最后一个字节位置</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> fromIndex - <span class="number">1</span>; i &gt;= toIndex; i --) &#123;</span><br><span class="line">        <span class="keyword">if</span> (buffer.getByte(i) == value) &#123;</span><br><span class="line">            <span class="keyword">return</span> i;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="bytesBefore"><a href="#bytesBefore" class="headerlink" title="bytesBefore"></a>bytesBefore</h2><p>bytesBefore 函数拥有三个重载方法：</p>
+<p><img src="https://images.ytao.top/bytebuf-bytesBefore-list.png"></p>
+<p>bytesBefore 函数的实现，就是在 indexOf 上进行一层查找区间的封装，最后都是在 indexOf 中实现查找。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="title function_">bytesBefore</span><span class="params">(<span class="type">int</span> index, <span class="type">int</span> length, <span class="type">byte</span> value)</span> &#123;</span><br><span class="line">    <span class="comment">// 最终都进入 indexOf 中查找</span></span><br><span class="line">    <span class="type">int</span> <span class="variable">endIndex</span> <span class="operator">=</span> indexOf(index, index + length, value);</span><br><span class="line">    <span class="keyword">if</span> (endIndex &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 返回相对查找起始索引的位置</span></span><br><span class="line">    <span class="keyword">return</span> endIndex - index;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>注意：</strong>这里返回的是相对查找起始索引的位置。</p>
+<h2 id="forEachByte"><a href="#forEachByte" class="headerlink" title="forEachByte"></a>forEachByte</h2><p>forEachByte 函数有两个重载方法：</p>
+<p><img src="https://images.ytao.top/bytebuf-forEachByte-list.png"></p>
+<p>这里涉及到一个 ByteBufProcessor 接口，这个是对一些常用的字节，其中包括 空，空白键，换行等等进行了抽象定义。<br>forEachByte 函数实现主要逻辑：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="type">int</span> <span class="title function_">forEachByteAsc0</span><span class="params">(<span class="type">int</span> index, <span class="type">int</span> length, ByteBufProcessor processor)</span> &#123;</span><br><span class="line"><span class="keyword">if</span> (processor == <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">NullPointerException</span>(<span class="string">&quot;processor&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (length == <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">final</span> <span class="type">int</span> <span class="variable">endIndex</span> <span class="operator">=</span> index + length;</span><br><span class="line"><span class="comment">// 起始 -&gt; 终点索引，进行遍历</span></span><br><span class="line"><span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> index;</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        <span class="comment">// 如果可以匹配上字节，返回该索引位置</span></span><br><span class="line">        <span class="keyword">if</span> (processor.process(_getByte(i))) &#123;</span><br><span class="line">            i ++;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> i;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">while</span> (i &lt; endIndex);</span><br><span class="line">&#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    PlatformDependent.throwException(e);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 查找区间遍历完没有匹配上，返回 -1</span></span><br><span class="line"><span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="forEachByteDesc"><a href="#forEachByteDesc" class="headerlink" title="forEachByteDesc"></a>forEachByteDesc</h2><p>forEachByteDesc 也是有两个重载方法：</p>
+<p><img src="https://images.ytao.top/bytebuf-forEachByteDesc-list.png"></p>
+<p>forEachByteDesc 从函数名字可以看出，指的倒序查找。意指从查找区间最大索引到最小索引进行遍历：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="type">int</span> <span class="title function_">forEachByteDesc0</span><span class="params">(<span class="type">int</span> index, <span class="type">int</span> length, ByteBufProcessor processor)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (processor == <span class="literal">null</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">NullPointerException</span>(<span class="string">&quot;processor&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (length == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 从最大索引开始，进行遍历</span></span><br><span class="line">    <span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> index + length - <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">do</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (processor.process(_getByte(i))) &#123;</span><br><span class="line">                i --;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> i;</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="comment">// 直到 i 小于查找区间最小索引值时，遍历完成</span></span><br><span class="line">        &#125; <span class="keyword">while</span> (i &gt;= index);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        PlatformDependent.throwException(e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 没有找到指定字节返回 -1</span></span><br><span class="line">    <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>查找操作的具体实现还是比较好理解，进入代码查看实现一般都能读懂。</p>
+<h1 id="复制"><a href="#复制" class="headerlink" title="复制"></a>复制</h1><p>ByteBuf 复制后会生成一个新的 ByteBuf 对象。<br><strong>copy()</strong> 整个对象被复制，其所有数据都是该对象自身维护，与旧对象无任何关联关系。包括缓冲区内容，但是该方法的的容量默认为旧 buf 的可读区间大小，读索引为 0，写索引为旧数据写索引的值。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ByteBuf</span> <span class="variable">buf2</span> <span class="operator">=</span> buf.copy();</span><br><span class="line">System.out.println(String.format(<span class="string">&quot;\ncopy: ridx=%s widx=%s cap=%s&quot;</span>, buf2.readerIndex(), buf2.writerIndex(), buf2.capacity()));</span><br></pre></td></tr></table></figure>
+
+<p>执行结果：</p>
+<p><img src="https://images.ytao.top/bytebuf-copy-1.png"></p>
+<p><strong>copy(int index, int length)</strong> 为指定复制的起始位置及长度，其他与上面 copy() 类似。<br><strong>duplicate()</strong> 这个也是复制，但是与 copy 函数不同的是，复制后生成的 ByteBuf 和旧的 ByteBuf 是共享一份缓冲区内容的。它复制的只是自己可以单独维护的一份索引。并且它复制的默认容量也是和旧的一样。</p>
+<h1 id="对象引用-回收"><a href="#对象引用-回收" class="headerlink" title="对象引用&#x2F;回收"></a>对象引用&#x2F;回收</h1><p>ByteBuf 对象被引用后，可以调用 <strong>retain()</strong> 函数进行累计计数。每调用一次 retain() 则会 +1。<br>其在 AbstractReferenceCountedByteBuf 实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> ByteBuf <span class="title function_">retain</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        <span class="type">int</span> <span class="variable">refCnt</span> <span class="operator">=</span> <span class="built_in">this</span>.refCnt;</span><br><span class="line">        <span class="keyword">if</span> (refCnt == <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalReferenceCountException</span>(<span class="number">0</span>, <span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 达到最大值时，抛出异常</span></span><br><span class="line">        <span class="keyword">if</span> (refCnt == Integer.MAX_VALUE) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalReferenceCountException</span>(Integer.MAX_VALUE, <span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 保证线程安全，这里 CAS 进行累加</span></span><br><span class="line">        <span class="keyword">if</span> (refCntUpdater.compareAndSet(<span class="built_in">this</span>, refCnt, refCnt + <span class="number">1</span>)) &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">compareAndSet</span><span class="params">(T obj, <span class="type">int</span> expect, <span class="type">int</span> update)</span> &#123;</span><br><span class="line">    <span class="comment">// unsafe 为jdk的 Unsafe 类</span></span><br><span class="line">    <span class="keyword">return</span> unsafe.compareAndSwapInt(obj, offset, expect, update);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>同样，可以进行添加多个引用，自己指定数量，<strong>retain(int increment)</strong> 带参函数实现，和上面 +1 实现思路一样，代码就不贴出来了。</p>
+<p>ByteBuf 在申请内存使用完后，需要对其进行释放，否则可能会造成资源浪费及内存泄漏的风险。这也是 ByteBuf 自己实现的一套有效回收机制。<br>释放的函数为 **release()**，它的实现就是每次 -1。直到为 1 时，调用释放函数 <strong>deallocate()</strong> 进行释放。<br>其在 AbstractReferenceCountedByteBuf 实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="type">boolean</span> <span class="title function_">release</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        <span class="type">int</span> <span class="variable">refCnt</span> <span class="operator">=</span> <span class="built_in">this</span>.refCnt;</span><br><span class="line">        <span class="keyword">if</span> (refCnt == <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalReferenceCountException</span>(<span class="number">0</span>, -<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 引用数量 -1</span></span><br><span class="line">        <span class="keyword">if</span> (refCntUpdater.compareAndSet(<span class="built_in">this</span>, refCnt, refCnt - <span class="number">1</span>)) &#123;</span><br><span class="line">            当引用数量为 <span class="number">1</span> 时，符合释放条件</span><br><span class="line">            <span class="keyword">if</span> (refCnt == <span class="number">1</span>) &#123;</span><br><span class="line">                deallocate();</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>同样，释放也支持一次释放多个引用数量，也是通过指定数量，传递给 <strong>release(int decrement)</strong> 进行引用数量的减少并释放对象。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><blockquote>
+<p>本文对 ByteBuf 中最基本，最常用 API 进行的解读，这也是在实际开发中或阅读相关代码时，可能会遇到的基本 API，通过两篇文章的说明，相信对 ByteBuf 的基本使用不会存在太大问题，还有些未分析到的 API，根据自己对 ByteBuf 已有的理解，差不多也能进行分析。</p>
+</blockquote>
+
+      
+    </div>
+    
+    
+    
+
+    
+      <div>
+        <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://yangtao.ytao.top/ytao%E5%85%AC%E4%BC%97%E5%8F%B7.jpg" alt=" wechat" style="width: 200px; max-width: 100%;"/>
+    <div>我的公众号</div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>原创技术分享，感谢您的鼓励！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span><!-- Donate -->赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="https://yangtao.ytao.top/wechatpay.png" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="https://yangtao.ytao.top/alipay.jpg" alt=" Alipay"/>
+        <p>Alipay</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Netty/" rel="tag"># Netty</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/12/23/12-netty-buf/" rel="next" title="Netty之缓冲区ByteBuf解读（一）">
+                <i class="fa fa-chevron-left"></i> Netty之缓冲区ByteBuf解读（一）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/01/06/14-redis-streams/" rel="prev" title="Redis5新特性Streams作消息队列">
+                Redis5新特性Streams作消息队列 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+          <div class="post-spread">
+            
+          </div>
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="https://yangtao.ytao.top/ytao-about_1.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name">
+               
+              <!-- 
+              <br>
+              杨&nbsp;滔 
+              -->
+              <br>
+              原创技术博客
+              </p>
+              <p class="site-description motion-element" itemprop="description">
+              路漫漫其修远兮，吾将上下而求索
+              <!-- 
+              
+              -->
+              </p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="/links/" target="_blank" title="Links">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Links</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BB%E5%86%99%E6%8C%87%E9%92%88%E5%9B%9E%E6%BB%9A"><span class="nav-number">1.</span> <span class="nav-text">读写指针回滚</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BB%E5%86%99%E6%8C%87%E9%92%88%E6%B8%85%E7%A9%BA"><span class="nav-number">2.</span> <span class="nav-text">读写指针清空</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9F%A5%E6%89%BE%E5%AD%97%E7%AC%A6%E4%BD%8D%E7%BD%AE"><span class="nav-number">3.</span> <span class="nav-text">查找字符位置</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#indexOf"><span class="nav-number">3.1.</span> <span class="nav-text">indexOf</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bytesBefore"><span class="nav-number">3.2.</span> <span class="nav-text">bytesBefore</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#forEachByte"><span class="nav-number">3.3.</span> <span class="nav-text">forEachByte</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#forEachByteDesc"><span class="nav-number">3.4.</span> <span class="nav-text">forEachByteDesc</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A4%8D%E5%88%B6"><span class="nav-number">4.</span> <span class="nav-text">复制</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AF%B9%E8%B1%A1%E5%BC%95%E7%94%A8-%E5%9B%9E%E6%94%B6"><span class="nav-number">5.</span> <span class="nav-text">对象引用&#x2F;回收</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yang Tao</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+<!-- 访问统计 -->
+
+    <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span id="busuanzi_container_site_pv">本站总访问量<span id="busuanzi_value_site_pv"></span>次</span>
+    <span class="post-meta-divider">|</span>
+    <span id="busuanzi_container_site_uv">本站访客数<span id="busuanzi_value_site_uv"></span>人</span>
+
+
+<!-- 备案号 -->
+<p>
+	<a class="beian" style="font-size:12px; color:gray; border-bottom: none;" href="https://beian.miit.gov.cn" target="_blank">
+    粤ICP备19117800号
+	</a>
+</p>
+
+
+<script src="https://my.openwrite.cn/js/readmore.js" type="text/javascript"></script>
+<script>
+    const btw = new BTWPlugin();
+    btw.init({
+        id: 'owContent',
+        blogId: '15390-1575515911767-844',
+        name: '『ytao』',
+        qrcode: 'http://yangtao.ytao.top/ytao%E5%85%AC%E4%BC%97%E5%8F%B7.jpg',
+        keyword: 'ytao',
+    });
+</script>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+  <script type="text/javascript" src="/js/src/exturl.js?v=5.1.4"></script>
+
+
+</body>
+</html>

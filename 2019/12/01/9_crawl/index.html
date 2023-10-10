@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh_CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Scrapy,爬虫," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="ytao's blog" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="由于互联网的极速发展，所有现在的信息处于大量堆积的状态，我们既要向外界获取大量数据，又要在大量数据中过滤无用的数据。针对我们有益的数据需要我们进行指定抓取，从而出现了现在的爬虫技术，通过爬虫技术我们可以快速获取我们需要的数据。但是在这爬虫过程中，信息拥有方会对爬虫进行反爬处理，我们就需要对这些困难进行逐个击破。  刚好前段时间做了爬虫相关的工作，这里就记录下一些相关的心得。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Scrapy爬虫及案例剖析">
+<meta property="og:url" content="https://ytao.top/2019/12/01/9_crawl/index.html">
+<meta property="og:site_name" content="ytao&#39;s blog">
+<meta property="og:description" content="由于互联网的极速发展，所有现在的信息处于大量堆积的状态，我们既要向外界获取大量数据，又要在大量数据中过滤无用的数据。针对我们有益的数据需要我们进行指定抓取，从而出现了现在的爬虫技术，通过爬虫技术我们可以快速获取我们需要的数据。但是在这爬虫过程中，信息拥有方会对爬虫进行反爬处理，我们就需要对这些困难进行逐个击破。  刚好前段时间做了爬虫相关的工作，这里就记录下一些相关的心得。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://images.ytao.top/crawl.jpg">
+<meta property="og:image" content="https://images.ytao.top/scrapy-startproject.png">
+<meta property="og:image" content="https://images.ytao.top/scrapy-tree.png">
+<meta property="og:image" content="https://images.ytao.top/scrapy-frame.png">
+<meta property="og:image" content="https://images.ytao.top/scrapy-page.png">
+<meta property="og:image" content="https://images.ytao.top/scrapy-page-html.png">
+<meta property="og:image" content="https://images.ytao.top/scrapy-page-url.png">
+<meta property="og:image" content="https://images.ytao.top/scrapy-data-1.png">
+<meta property="og:image" content="https://images.ytao.top/scrapy-data-2.png">
+<meta property="og:image" content="https://images.ytao.top/scrapy-ascii.png">
+<meta property="og:image" content="https://images.ytao.top/scrapy-font.png">
+<meta property="og:image" content="https://images.ytao.top/scrapy-font-data.png">
+<meta property="og:image" content="https://images.ytao.top/scrapy-verify.png">
+<meta property="og:image" content="https://images.ytao.top/scrapy-scrapyd.png">
+<meta property="og:image" content="https://images.ytao.top/scrapy-scrapyd-page.png">
+<meta property="article:published_time" content="2019-11-30T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-10-10T14:18:14.221Z">
+<meta property="article:author" content="Yang Tao">
+<meta property="article:tag" content="Scrapy">
+<meta property="article:tag" content="爬虫">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://images.ytao.top/crawl.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":false,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+<!-- 百度统计代码获取 -->
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?3887053ae7b22ae6e4c1ba814b74f794";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+<!-- 百度自动推送链接 -->
+<script>
+  (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      if (curProtocol === 'https') {
+          bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+      }
+      else {
+          bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+      }
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+  })();
+</script>
+
+
+
+
+  <link rel="canonical" href="https://ytao.top/2019/12/01/9_crawl/"/>
+
+
+
+
+
+  <title>Scrapy爬虫及案例剖析 | ytao's blog</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh_CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ytao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    <!-- 文章里设置公众号导流 -->
+    <div id="owContent">
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://ytao.top/2019/12/01/9_crawl/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://yangtao.ytao.top/ytao-about_1.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ytao's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Scrapy爬虫及案例剖析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-01T00:00:00+08:00">
+                2019-12-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Scrapy/" itemprop="url" rel="index">
+                    <span itemprop="name">Scrapy</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-eye"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="https://images.ytao.top/crawl.jpg"></p>
+<blockquote>
+<p>由于互联网的极速发展，所有现在的信息处于大量堆积的状态，我们既要向外界获取大量数据，又要在大量数据中过滤无用的数据。针对我们有益的数据需要我们进行指定抓取，从而出现了现在的爬虫技术，通过爬虫技术我们可以快速获取我们需要的数据。但是在这爬虫过程中，信息拥有方会对爬虫进行反爬处理，我们就需要对这些困难进行逐个击破。</p>
+</blockquote>
+<p><strong>刚好前段时间做了爬虫相关的工作，这里就记录下一些相关的心得。</strong></p>
+<span id="more"></span>
+
+<p>本文案例代码地址 <a target="_blank" rel="noopener" href="https://github.com/yangtao9502/ytaoCrawl">https://github.com/yangtao9502/ytaoCrawl</a></p>
+<p>这里我是使用的 Scrapy 框架进行爬虫，开发环境相关版本号：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Scrapy       : 1.5.1</span><br><span class="line">lxml         : 4.2.5.0</span><br><span class="line">libxml2      : 2.9.8</span><br><span class="line">cssselect    : 1.0.3</span><br><span class="line">parsel       : 1.5.1</span><br><span class="line">w3lib        : 1.20.0</span><br><span class="line">Twisted      : 18.9.0</span><br><span class="line">Python       : 3.7.1 (default, Dec 10 2018, 22:54:23) [MSC v.1915 64 bit (AMD64)]</span><br><span class="line">pyOpenSSL    : 18.0.0 (OpenSSL 1.1.1a  20 Nov 2018)</span><br><span class="line">cryptography : 2.4.2</span><br><span class="line">Platform     : Windows-10-10.0.15063-SP0</span><br></pre></td></tr></table></figure>
+
+<p>本地开发环境建议使用 Anaconda 安装相关环境，否则可能出现各种依赖包的冲突，相信遇到过的都深有体会，在你配置相关环境的时候就失去爬虫的兴趣。<br>本文提取页面数据主要使用 Xpath ，所以在进行文中案例操作前，先了解 Xpath 的基本使用。 </p>
+<h1 id="创建-Scrapy-项目"><a href="#创建-Scrapy-项目" class="headerlink" title="创建 Scrapy 项目"></a>创建 Scrapy 项目</h1><p>scrapy 创建项目很简单，直接一条命令搞定，接下来我们创建 ytaoCrawl 项目：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scrapy startproject ytaoCrawl</span><br></pre></td></tr></table></figure>
+
+<p>注意，项目名称必须以字母开头，并且只包含字母、数字和下划线。<br>创建成功后界面显示：</p>
+<p><img src="https://images.ytao.top/scrapy-startproject.png"></p>
+<p>初始化项目的文件有：</p>
+<p><img src="https://images.ytao.top/scrapy-tree.png"></p>
+<p>其中各个文件的用途：</p>
+<ul>
+<li>spider 目录用于存放爬虫文件。</li>
+<li>items.py 文件最为对象，将爬虫数据保存在该对象中。</li>
+<li>middlewares.py 文件为中间件处理器，比如请求和响应的转换都在里面实现。</li>
+<li>pipelines.py 文件为数据管道，用于数据抓取后输送。</li>
+<li>settings.py 文件为配置文件，爬虫中的一些配置可在该文件中设置。</li>
+<li>scrapy.cfg 文件为爬虫部署的配置文件。</li>
+</ul>
+<p>了解几个默认生成的文件后再看下面的 scrapy 结构原理图，相对好理解。</p>
+<p><img src="https://images.ytao.top/scrapy-frame.png"></p>
+<p>这样我们的一个 scrapy 爬虫项目就此创建完成。</p>
+<h1 id="创建-Spider"><a href="#创建-Spider" class="headerlink" title="创建 Spider"></a>创建 Spider</h1><p>我们先创建一个 python 文件 ytaoSpider，该类必须继承 scrapy.Spider 类。接下来我们就以爬取北京  58 租房信息为例进行分析。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/python3</span></span><br><span class="line"><span class="comment"># -*- coding: utf-8 -*-</span></span><br><span class="line"><span class="comment"># </span></span><br><span class="line"><span class="comment"># @Author  : YangTao</span></span><br><span class="line"><span class="comment"># @blog    : https://ytao.top</span></span><br><span class="line"><span class="comment"># </span></span><br><span class="line"><span class="keyword">import</span> scrapy</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">YtaoSpider</span>(scrapy.Spider):</span><br><span class="line">    <span class="comment"># 定义爬虫名称</span></span><br><span class="line">    name = <span class="string">&quot;crawldemo&quot;</span></span><br><span class="line">    <span class="comment"># 允许爬取的域名，但不包含 start_urls 中的链接</span></span><br><span class="line">    allowed_domains = [<span class="string">&quot;58.com&quot;</span>]</span><br><span class="line">    <span class="comment"># 起始爬取链接</span></span><br><span class="line">    start_urls = [</span><br><span class="line">        <span class="string">&quot;https://bj.58.com/chuzu/?PGTID=0d100000-0038-e441-0c8a-adeb346199d8&amp;ClickID=2&quot;</span></span><br><span class="line">    ]</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">download</span>(<span class="params">self, response, fName</span>):</span><br><span class="line">        <span class="keyword">with</span> <span class="built_in">open</span>(fName + <span class="string">&quot;.html&quot;</span>, <span class="string">&#x27;wb&#x27;</span>) <span class="keyword">as</span> f:</span><br><span class="line">            f.write(response.body)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># response 是返回抓取后的对象</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">parse</span>(<span class="params">self, response</span>):</span><br><span class="line">        <span class="comment"># 下载北京租房页面到本地，便于分析</span></span><br><span class="line">        self.download(response, <span class="string">&quot;北京租房&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>通过执行命令启动爬虫，指定爬虫名字：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scrapy crawl crawldemo</span><br></pre></td></tr></table></figure>
+
+<p>当我们有多个爬虫时，可以通过 <code>scrapy list</code> 获取所有的爬虫名。</p>
+<p>开发过程中当然也可以用 mian 函数在编辑器中启动：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    name = YtaoSpider.name</span><br><span class="line">    cmd = <span class="string">&#x27;scrapy crawl &#123;0&#125; &#x27;</span>.<span class="built_in">format</span>(name)</span><br><span class="line">    cmdline.execute(cmd.split())</span><br></pre></td></tr></table></figure>
+
+<p>这时将在我们启动的目录中下载生成我们爬取的页面。</p>
+<h1 id="翻页爬取"><a href="#翻页爬取" class="headerlink" title="翻页爬取"></a>翻页爬取</h1><p>上面我们只爬取到了第一页，但是我们实际抓取数据过程中，必定会涉及到分页，所以观察到该网站的分页是将最后一页有展示出来（58最多只展示前七十页的数据），如图。</p>
+<p><img src="https://images.ytao.top/scrapy-page.png"></p>
+<p>从下图观察到分页的 html 部分代码。</p>
+<p><img src="https://images.ytao.top/scrapy-page-html.png"></p>
+<p>接下来通过 Xpath 和正则匹配获取最后一页的页码。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">pageNum</span>(<span class="params">self, response</span>):</span><br><span class="line">    <span class="comment"># 获取分页的 html 代码块</span></span><br><span class="line">    page_ele = response.xpath(<span class="string">&quot;//li[@id=&#x27;pager_wrap&#x27;]/div[@class=&#x27;pager&#x27;]&quot;</span>)</span><br><span class="line">    <span class="comment"># 通过正则获取含有页码数字的文本</span></span><br><span class="line">    num_eles = re.findall(<span class="string">r&quot;&gt;\d+&lt;&quot;</span>, page_ele.extract()[<span class="number">0</span>].strip())</span><br><span class="line">    <span class="comment"># 找出最大的一个</span></span><br><span class="line">    count = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> num_ele <span class="keyword">in</span> num_eles:</span><br><span class="line">        num_ele = <span class="built_in">str</span>(num_ele).replace(<span class="string">&quot;&gt;&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;&lt;&quot;</span>, <span class="string">&quot;&quot;</span>)</span><br><span class="line">        num = <span class="built_in">int</span>(num_ele)</span><br><span class="line">        <span class="keyword">if</span> num &gt; count:</span><br><span class="line">            count = num</span><br><span class="line">    <span class="keyword">return</span> count</span><br></pre></td></tr></table></figure>
+
+<p>通过对租房链接进行分析，可以看出不同页码的链接为<code>https://bj.58.com/chuzu/pn</code>+<code>num</code> 这里的<code>num</code>代表页码，我们进行不同的页码抓取时，只需更换页码即可，parse 函数可更改为：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 爬虫链接，不含页码</span></span><br><span class="line">target_url = <span class="string">&quot;https://bj.58.com/chuzu/pn&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">parse</span>(<span class="params">self, response</span>):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;url: &quot;</span>, response.url)</span><br><span class="line">        num = self.pageNum(response)</span><br><span class="line">        <span class="comment"># 开始页面本来就是第一页，所以在遍历页面时，过滤掉第一页</span></span><br><span class="line">        p = <span class="number">1</span></span><br><span class="line">        <span class="keyword">while</span> p &lt; num:</span><br><span class="line">            p += <span class="number">1</span></span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line">                <span class="comment"># 拼接下一页链接</span></span><br><span class="line">                url = self.target_url + <span class="built_in">str</span>(p)</span><br><span class="line">                <span class="comment"># 进行抓取下一页</span></span><br><span class="line">                <span class="keyword">yield</span> Request(url, callback=self.parse)</span><br><span class="line">            <span class="keyword">except</span> BaseException <span class="keyword">as</span> e:</span><br><span class="line">                logging.error(e)</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">&quot;爬取数据异常：&quot;</span>, url)</span><br></pre></td></tr></table></figure>
+
+<p>执行后，打印出的信息如图：</p>
+<p><img src="https://images.ytao.top/scrapy-page-url.png"></p>
+<p>因为爬虫是异步抓取，所以我们的打印出来的并非有序数据。<br><strong>上面所介绍的是通过获取最后一页的页码进行遍历抓取，但是有些网站没有最后一页的页码，这时我们可以通过下一页来判断当前页是否为最后一页，如果不是，就获取下一页所携带的链接进行爬取。</strong></p>
+<h1 id="获取数据"><a href="#获取数据" class="headerlink" title="获取数据"></a>获取数据</h1><p>这里我们就获取标题，面积，位置，小区，及价格信息，我们需要先在 item 中创建这些字段，闲话少说，上代码。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 避免取xpath解析数据时索引越界</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">xpath_extract</span>(<span class="params">self, selector, index</span>):</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(selector.extract()) &gt; index:</span><br><span class="line">        <span class="keyword">return</span> selector.extract()[index].strip()</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">setData</span>(<span class="params">self, response</span>):</span><br><span class="line">    items = []</span><br><span class="line">    houses = response.xpath(<span class="string">&quot;//ul[@class=&#x27;house-list&#x27;]/li[@class=&#x27;house-cell&#x27;]&quot;</span>)</span><br><span class="line">    <span class="keyword">for</span> house <span class="keyword">in</span> houses:</span><br><span class="line">        item = YtaocrawlItem()</span><br><span class="line">        <span class="comment"># 标题</span></span><br><span class="line">        item[<span class="string">&quot;title&quot;</span>] = self.xpath_extract(house.xpath(<span class="string">&quot;div[@class=&#x27;des&#x27;]/h2/a/text()&quot;</span>), <span class="number">0</span>)</span><br><span class="line">        <span class="comment"># 面积</span></span><br><span class="line">        item[<span class="string">&quot;room&quot;</span>] = self.xpath_extract(house.xpath(<span class="string">&quot;div[@class=&#x27;des&#x27;]/p[@class=&#x27;room&#x27;]/text()&quot;</span>), <span class="number">0</span>)</span><br><span class="line">        <span class="comment"># 位置</span></span><br><span class="line">        item[<span class="string">&quot;position&quot;</span>] = self.xpath_extract(house.xpath(<span class="string">&quot;div[@class=&#x27;des&#x27;]/p[@class=&#x27;infor&#x27;]/a/text()&quot;</span>), <span class="number">0</span>)</span><br><span class="line">        <span class="comment"># 小区</span></span><br><span class="line">        item[<span class="string">&quot;quarters&quot;</span>] = self.xpath_extract(house.xpath(<span class="string">&quot;div[@class=&#x27;des&#x27;]/p[@class=&#x27;infor&#x27;]/a/text()&quot;</span>), <span class="number">1</span>)</span><br><span class="line">        money = self.xpath_extract(house.xpath(<span class="string">&quot;div[@class=&#x27;list-li-right&#x27;]/div[@class=&#x27;money&#x27;]/b/text()&quot;</span>), <span class="number">0</span>)</span><br><span class="line">        unit = self.xpath_extract(house.xpath(<span class="string">&quot;div[@class=&#x27;list-li-right&#x27;]/div[@class=&#x27;money&#x27;]/text()&quot;</span>), <span class="number">1</span>)</span><br><span class="line">        <span class="comment"># 价格</span></span><br><span class="line">        item[<span class="string">&quot;price&quot;</span>] = money+unit</span><br><span class="line">        items.append(item)</span><br><span class="line">    <span class="keyword">return</span> items</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">parse</span>(<span class="params">self, response</span>):</span><br><span class="line">    items = self.setData(response)</span><br><span class="line">    <span class="keyword">for</span> item <span class="keyword">in</span> items:</span><br><span class="line">        <span class="keyword">yield</span> item</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 接着上面的翻页操作 .....</span></span><br></pre></td></tr></table></figure>
+
+<p>至此，我们以获取我们想要的数据，通过打印 parse 中的 item 可看到结果。</p>
+<h1 id="数据入库"><a href="#数据入库" class="headerlink" title="数据入库"></a>数据入库</h1><p>我们已抓取到页面的数据，接下来就是将数据入库，这里我们以 MySQL 存储为例，数据量大的情况，建议使用使用其它存储产品。<br>首先我们先在 settings.py 配置文件中设置 ITEM_PIPELINES 属性，指定 Pipeline 处理类。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ITEM_PIPELINES = &#123;</span><br><span class="line">    <span class="comment"># 值越小，优先级调用越高</span></span><br><span class="line">   <span class="string">&#x27;ytaoCrawl.pipelines.YtaocrawlPipeline&#x27;</span>: <span class="number">300</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 YtaocrawlPipeline 类中处理数据持久化，这里 MySQL 封装工具类 mysqlUtils 代码可在 github 中查看。<br>通过再 YtaoSpider#parse 中使用 yield 将数据传输到 YtaocrawlPipeline#process_item 中进行处理。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">YtaocrawlPipeline</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">process_item</span>(<span class="params">self, item, spider</span>):</span><br><span class="line">        table = <span class="string">&quot;crawl&quot;</span></span><br><span class="line">        item[<span class="string">&quot;id&quot;</span>] = <span class="built_in">str</span>(uuid.uuid1())</span><br><span class="line">        <span class="comment"># 如果当前爬取信息的链接在库中有存在，那么就删除旧的再保存新的</span></span><br><span class="line">        <span class="built_in">list</span> = select(<span class="built_in">str</span>.<span class="built_in">format</span>(<span class="string">&quot;select * from &#123;0&#125; WHERE url = &#x27;&#123;1&#125;&#x27;&quot;</span>, table, item[<span class="string">&quot;url&quot;</span>]))</span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">len</span>(<span class="built_in">list</span>) &gt; <span class="number">0</span>:</span><br><span class="line">            <span class="keyword">for</span> o <span class="keyword">in</span> <span class="built_in">list</span>:</span><br><span class="line">                delete_by_id(o[<span class="number">0</span>], table)</span><br><span class="line">        insert(item, table)</span><br><span class="line">        <span class="keyword">return</span> item</span><br></pre></td></tr></table></figure>
+
+<p>在数据库中，可以看到成功抓取到数据并入库。</p>
+<p><img src="https://images.ytao.top/scrapy-data-1.png"></p>
+<h1 id="反爬机制应对"><a href="#反爬机制应对" class="headerlink" title="反爬机制应对"></a>反爬机制应对</h1><p>既然有数据爬虫的需求，那么就一定有反扒措施，就当前爬虫案例进行一下分析。</p>
+<h2 id="字体加密"><a href="#字体加密" class="headerlink" title="字体加密"></a>字体加密</h2><p>通过上面数据库数据的图，可以看到该数据中存在<code>乱码</code>，通过查看数据乱码规律，可以定位在数字进行了加密。</p>
+<p><img src="https://images.ytao.top/scrapy-data-2.png"></p>
+<p>同时，通过打印数据可以看到<code>\xa0</code>字符，这个（代表空白符）在 ASCII 字符 0x20~0x7e 范围，可知是转换为了 ASCII 编码。</p>
+<p><img src="https://images.ytao.top/scrapy-ascii.png"></p>
+<p>因为知道是字体加密，所以在下载的页面查看<code>font-family</code>字体时，发现有如下图所示代码：</p>
+<p><img src="https://images.ytao.top/scrapy-font.png"></p>
+<p>看到这个<code>fangchan-secret</code>字体比较可疑了，它是在js中动态生成的字体，且以 base64 存储，将以下字体进行解码操作。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    secret = <span class="string">&quot;AAEAAAALAIAAAwAwR1NVQiCLJXoAAAE4AAAAVE9TLzL4XQjtAAABjAAAAFZjbWFwq8p/XQAAAhAAAAIuZ2x5ZuWIN0cAAARYAAADdGhlYWQXlvp9AAAA4AAAADZoaGVhCtADIwAAALwAAAAkaG10eC7qAAAAAAHkAAAALGxvY2ED7gSyAAAEQAAAABhtYXhwARgANgAAARgAAAAgbmFtZTd6VP8AAAfMAAACanBvc3QFRAYqAAAKOAAAAEUAAQAABmb+ZgAABLEAAAAABGgAAQAAAAAAAAAAAAAAAAAAAAsAAQAAAAEAAOOjpKBfDzz1AAsIAAAAAADaB9e2AAAAANoH17YAAP/mBGgGLgAAAAgAAgAAAAAAAAABAAAACwAqAAMAAAAAAAIAAAAKAAoAAAD/AAAAAAAAAAEAAAAKADAAPgACREZMVAAObGF0bgAaAAQAAAAAAAAAAQAAAAQAAAAAAAAAAQAAAAFsaWdhAAgAAAABAAAAAQAEAAQAAAABAAgAAQAGAAAAAQAAAAEERAGQAAUAAAUTBZkAAAEeBRMFmQAAA9cAZAIQAAACAAUDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFBmRWQAQJR2n6UGZv5mALgGZgGaAAAAAQAAAAAAAAAAAAAEsQAABLEAAASxAAAEsQAABLEAAASxAAAEsQAABLEAAASxAAAEsQAAAAAABQAAAAMAAAAsAAAABAAAAaYAAQAAAAAAoAADAAEAAAAsAAMACgAAAaYABAB0AAAAFAAQAAMABJR2lY+ZPJpLnjqeo59kn5Kfpf//AACUdpWPmTyaS546nqOfZJ+Sn6T//wAAAAAAAAAAAAAAAAAAAAAAAAABABQAFAAUABQAFAAUABQAFAAUAAAACAAGAAQAAgAKAAMACQABAAcABQAAAQYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAAAAAAiAAAAAAAAAAKAACUdgAAlHYAAAAIAACVjwAAlY8AAAAGAACZPAAAmTwAAAAEAACaSwAAmksAAAACAACeOgAAnjoAAAAKAACeowAAnqMAAAADAACfZAAAn2QAAAAJAACfkgAAn5IAAAABAACfpAAAn6QAAAAHAACfpQAAn6UAAAAFAAAAAAAAACgAPgBmAJoAvgDoASQBOAF+AboAAgAA/+YEWQYnAAoAEgAAExAAISAREAAjIgATECEgERAhIFsBEAECAez+6/rs/v3IATkBNP7S/sEC6AGaAaX85v54/mEBigGB/ZcCcwKJAAABAAAAAAQ1Bi4ACQAAKQE1IREFNSURIQQ1/IgBW/6cAicBWqkEmGe0oPp7AAEAAAAABCYGJwAXAAApATUBPgE1NCYjIgc1NjMyFhUUAgcBFSEEGPxSAcK6fpSMz7y389Hym9j+nwLGqgHButl0hI2wx43iv5D+69b+pwQAAQAA/+YEGQYnACEAABMWMzI2NRAhIzUzIBE0ISIHNTYzMhYVEAUVHgEVFAAjIiePn8igu/5bgXsBdf7jo5CYy8bw/sqow/7T+tyHAQN7nYQBJqIBFP9uuVjPpf7QVwQSyZbR/wBSAAACAAAAAARoBg0ACgASAAABIxEjESE1ATMRMyERNDcjBgcBBGjGvv0uAq3jxv58BAQOLf4zAZL+bgGSfwP8/CACiUVaJlH9TwABAAD/5gQhBg0AGAAANxYzMjYQJiMiBxEhFSERNjMyBBUUACEiJ7GcqaDEx71bmgL6/bxXLPUBEv7a/v3Zbu5mswEppA4DE63+SgX42uH+6kAAAAACAAD/5gRbBicAFgAiAAABJiMiAgMzNjMyEhUUACMiABEQACEyFwEUFjMyNjU0JiMiBgP6eYTJ9AIFbvHJ8P7r1+z+8wFhASClXv1Qo4eAoJeLhKQFRj7+ov7R1f762eP+3AFxAVMBmgHjLfwBmdq8lKCytAAAAAABAAAAAARNBg0ABgAACQEjASE1IQRN/aLLAkD8+gPvBcn6NwVgrQAAAwAA/+YESgYnABUAHwApAAABJDU0JDMyFhUQBRUEERQEIyIkNRAlATQmIyIGFRQXNgEEFRQWMzI2NTQBtv7rAQTKufD+3wFT/un6zf7+AUwBnIJvaJLz+P78/uGoh4OkAy+B9avXyqD+/osEev7aweXitAEohwF7aHh9YcJlZ/7qdNhwkI9r4QAAAAACAAD/5gRGBicAFwAjAAA3FjMyEhEGJwYjIgA1NAAzMgAREAAhIicTFBYzMjY1NCYjIga5gJTQ5QICZvHD/wABGN/nAQT+sP7Xo3FxoI16pqWHfaTSSgFIAS4CAsIBDNbkASX+lf6l/lP+MjUEHJy3p3en274AAAAAABAAxgABAAAAAAABAA8AAAABAAAAAAACAAcADwABAAAAAAADAA8AFgABAAAAAAAEAA8AJQABAAAAAAAFAAsANAABAAAAAAAGAA8APwABAAAAAAAKACsATgABAAAAAAALABMAeQADAAEECQABAB4AjAADAAEECQACAA4AqgADAAEECQADAB4AuAADAAEECQAEAB4A1gADAAEECQAFABYA9AADAAEECQAGAB4BCgADAAEECQAKAFYBKAADAAEECQALACYBfmZhbmdjaGFuLXNlY3JldFJlZ3VsYXJmYW5nY2hhbi1zZWNyZXRmYW5nY2hhbi1zZWNyZXRWZXJzaW9uIDEuMGZhbmdjaGFuLXNlY3JldEdlbmVyYXRlZCBieSBzdmcydHRmIGZyb20gRm9udGVsbG8gcHJvamVjdC5odHRwOi8vZm9udGVsbG8uY29tAGYAYQBuAGcAYwBoAGEAbgAtAHMAZQBjAHIAZQB0AFIAZQBnAHUAbABhAHIAZgBhAG4AZwBjAGgAYQBuAC0AcwBlAGMAcgBlAHQAZgBhAG4AZwBjAGgAYQBuAC0AcwBlAGMAcgBlAHQAVgBlAHIAcwBpAG8AbgAgADEALgAwAGYAYQBuAGcAYwBoAGEAbgAtAHMAZQBjAHIAZQB0AEcAZQBuAGUAcgBhAHQAZQBkACAAYgB5ACAAcwB2AGcAMgB0AHQAZgAgAGYAcgBvAG0AIABGAG8AbgB0AGUAbABsAG8AIABwAHIAbwBqAGUAYwB0AC4AaAB0AHQAcAA6AC8ALwBmAG8AbgB0AGUAbABsAG8ALgBjAG8AbQAAAAIAAAAAAAAAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACwECAQMBBAEFAQYBBwEIAQkBCgELAQwAAAAAAAAAAAAAAAAAAAAA&quot;</span></span><br><span class="line">    <span class="comment"># 将字体文件编码转换为 UTF-8 编码的字节对象</span></span><br><span class="line">    <span class="built_in">bytes</span> = secret.encode(encoding=<span class="string">&#x27;UTF-8&#x27;</span>)</span><br><span class="line">    <span class="comment"># base64位解码</span></span><br><span class="line">    decodebytes = base64.decodebytes(<span class="built_in">bytes</span>)</span><br><span class="line">    <span class="comment"># 利用 decodebytes 初始化 BytesIO，然后使用 TTFont 解析字体库</span></span><br><span class="line">    font = TTFont(BytesIO(decodebytes))</span><br><span class="line">    <span class="comment"># 字体的映射关系</span></span><br><span class="line">    font_map = font[<span class="string">&#x27;cmap&#x27;</span>].tables[<span class="number">0</span>].ttFont.tables[<span class="string">&#x27;cmap&#x27;</span>].tables[<span class="number">0</span>].cmap</span><br><span class="line"></span><br><span class="line">    <span class="built_in">print</span>(font_map)</span><br></pre></td></tr></table></figure>
+
+<p>通过将 fontTools 库的 TTFont 将字体进行解析，都到如下字体映射结果:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">	38006: <span class="string">&#x27;glyph00007&#x27;</span>,</span><br><span class="line">	38287: <span class="string">&#x27;glyph00005&#x27;</span>,</span><br><span class="line">	39228: <span class="string">&#x27;glyph00006&#x27;</span>,</span><br><span class="line">	39499: <span class="string">&#x27;glyph00003&#x27;</span>,</span><br><span class="line">	40506: <span class="string">&#x27;glyph00010&#x27;</span>,</span><br><span class="line">	40611: <span class="string">&#x27;glyph00001&#x27;</span>,</span><br><span class="line">	40804: <span class="string">&#x27;glyph00009&#x27;</span>,</span><br><span class="line">	40850: <span class="string">&#x27;glyph00004&#x27;</span>,</span><br><span class="line">	40868: <span class="string">&#x27;glyph00002&#x27;</span>,</span><br><span class="line">	40869: <span class="string">&#x27;glyph00008&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>刚好十个映射，对应的 0<del>9 的数量，但是查找相应规律，1</del>9 后，出现了个 10，那么这里对应的数字到底是一个怎么样的规律呢？还有上面映射对应的 key 不是16进制的 ASCII 码，而是一个纯数字，是不是可能是十进制的码呢？<br>接下来验证我们的设想，将页面上获取的十六进制的码转换成十进制的码，然后去匹配映射中的数据，发现映射的值的非零数字部分刚好比页面上对应的数字字符大 1 ,可知，真正的值需要我们在映射值中减 1。<br>代码整理后</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">decrypt</span>(<span class="params">self, response, code</span>):</span><br><span class="line">    secret = re.findall(<span class="string">&quot;charset=utf-8;base64,(.*?)&#x27;\)&quot;</span>, response.text)[<span class="number">0</span>]</span><br><span class="line">    code = self.secretfont(code, secret)</span><br><span class="line">    <span class="keyword">return</span> code</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">secretfont</span>(<span class="params">self, code, secret</span>):</span><br><span class="line">    <span class="comment"># 将字体文件编码转换为 UTF-8 编码的字节对象</span></span><br><span class="line">    <span class="built_in">bytes</span> = secret.encode(encoding=<span class="string">&#x27;UTF-8&#x27;</span>)</span><br><span class="line">    <span class="comment"># base64位解码</span></span><br><span class="line">    decodebytes = base64.decodebytes(<span class="built_in">bytes</span>)</span><br><span class="line">    <span class="comment"># 利用 decodebytes 初始化 BytesIO，然后使用 TTFont 解析字体库</span></span><br><span class="line">    font = TTFont(BytesIO(decodebytes))</span><br><span class="line">    <span class="comment"># 字体的映射关系</span></span><br><span class="line">    font_map = font[<span class="string">&#x27;cmap&#x27;</span>].tables[<span class="number">0</span>].ttFont.tables[<span class="string">&#x27;cmap&#x27;</span>].tables[<span class="number">0</span>].cmap</span><br><span class="line">    chars = []</span><br><span class="line">    <span class="keyword">for</span> char <span class="keyword">in</span> code:</span><br><span class="line">        <span class="comment"># 将每个字符转换成十进制的 ASCII 码</span></span><br><span class="line">        decode = <span class="built_in">ord</span>(char)</span><br><span class="line">        <span class="comment"># 如果映射关系中存在 ASCII 的 key，那么这个字符就有对应的字体</span></span><br><span class="line">        <span class="keyword">if</span> decode <span class="keyword">in</span> font_map:</span><br><span class="line">            <span class="comment"># 获取映射的值</span></span><br><span class="line">            val = font_map[decode]</span><br><span class="line">            <span class="comment"># 根据规律，获取数字部分，再减1得到真正的值</span></span><br><span class="line">            char = <span class="built_in">int</span>(re.findall(<span class="string">&quot;\d+&quot;</span>, val)[<span class="number">0</span>]) - <span class="number">1</span></span><br><span class="line">        chars.append(char)</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;&quot;</span>.join(<span class="built_in">map</span>(<span class="keyword">lambda</span> s:<span class="built_in">str</span>(s), chars))</span><br></pre></td></tr></table></figure>
+
+<p>现在，我们将所有爬取的数据进行解密处理，再查看数据：</p>
+<p><img src="https://images.ytao.top/scrapy-font-data.png"></p>
+<p>上图中，进行解密后，完美解决数据乱码！</p>
+<h2 id="验证码和封禁IP"><a href="#验证码和封禁IP" class="headerlink" title="验证码和封禁IP"></a>验证码和封禁IP</h2><p>验证码一般分为两类，一类是刚开始进入时，必须输入验证码的，一类是频繁请求后，需要验证码验证再继续接下来的请求。<br>对于第一种来说，就必须破解它的验证码才能继续，第二种来说，除了破解验证码，还可以使用代理进行绕过验证。<br>对于封禁IP的反爬，同样可使用代理进行绕过。比如还是使用上面的网址爬虫，当它们识别到我可能是爬虫时，就会使用验证码进行拦截，如下图：</p>
+<p><img src="https://images.ytao.top/scrapy-verify.png"></p>
+<p>接下来，我们使用随机 User-Agent 和代理IP进行绕行。<br>先设置 settings.USER_AGENT，注意<strong>PC端和移动端不要混合设置的 User-Agent，否则你会爬取数据会异常，因为不同端的页面不同</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">USER_AGENT = [</span><br><span class="line">    <span class="string">&quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.10 Safari/537.36&quot;</span>,</span><br><span class="line">    <span class="string">&quot;Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; AcooBrowser; .NET CLR 1.1.4322; .NET CLR 2.0.50727)&quot;</span>,</span><br><span class="line">    <span class="comment"># ......</span></span><br><span class="line">]    </span><br></pre></td></tr></table></figure>
+
+<p>在请求中设置随机 User-Agent 中间件</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">RandomUserAgentMiddleware</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, agents</span>):</span><br><span class="line">        self.agent = agents</span><br><span class="line"></span><br><span class="line"><span class="meta">    @classmethod</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">from_crawler</span>(<span class="params">cls, crawler</span>):</span><br><span class="line">        <span class="keyword">return</span> cls(</span><br><span class="line">            agents=crawler.settings.get(<span class="string">&#x27;USER_AGENT&#x27;</span>)</span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">process_request</span>(<span class="params">self, request, spider</span>):</span><br><span class="line">        <span class="comment"># 随机获取设置中的一个 User-Agent</span></span><br><span class="line">        request.headers.setdefault(<span class="string">&#x27;User-Agent&#x27;</span>, random.choice(self.agent))</span><br></pre></td></tr></table></figure>
+
+<p>设置动态IP中间件</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">ProxyIPMiddleware</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, ip=<span class="string">&#x27;&#x27;</span></span>):</span><br><span class="line">        self.ip = ip</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">process_request</span>(<span class="params">self, request, spider</span>):</span><br><span class="line">        <span class="comment"># 如果当前的地址重定向到了验证码地址,就使用代理ip进行重新请求</span></span><br><span class="line">        <span class="keyword">if</span> self.ban_url(request.url):</span><br><span class="line">            <span class="comment"># 获取被重定向的地址</span></span><br><span class="line">            redirect_urls = request.meta.get(<span class="string">&quot;redirect_urls&quot;</span>)[<span class="number">0</span>]</span><br><span class="line">            <span class="comment"># 将当前重定向到验证码的地址改为原始请求地址</span></span><br><span class="line">            request._set_url(redirect_urls)</span><br><span class="line">            <span class="comment"># 设置动态代理,这里在线上一般使用接口动态生成代理</span></span><br><span class="line">            request.meta[<span class="string">&quot;proxy&quot;</span>] = <span class="string">&quot;http://%s&quot;</span> % (self.proxy_ip())</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">ban_url</span>(<span class="params">self, url</span>):</span><br><span class="line">        <span class="comment"># settings中设置的验证码或被禁止的页面链接，当遇到该链接时，爬虫会进行绕行重爬</span></span><br><span class="line">        dic = settings.BAN_URLS</span><br><span class="line">        <span class="comment"># 验证当前请求地址是否为验证码地址</span></span><br><span class="line">        <span class="keyword">for</span> d <span class="keyword">in</span> dic:</span><br><span class="line">            <span class="keyword">if</span> url.find(d) != -<span class="number">1</span>:</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">True</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 代理动态生成的 ip:port</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">proxy_ip</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="comment"># 模拟动态生成代理地址</span></span><br><span class="line">        ips = [</span><br><span class="line">            <span class="string">&quot;127.0.0.1:8888&quot;</span>,</span><br><span class="line">            <span class="string">&quot;127.0.0.1:8889&quot;</span>,</span><br><span class="line">        ]</span><br><span class="line">        <span class="keyword">return</span> random.choice(ips);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">process_response</span>(<span class="params">self, request, response, spider</span>):</span><br><span class="line">        <span class="comment"># 如果不是成功响应,则重新爬虫</span></span><br><span class="line">        <span class="keyword">if</span> response.status != <span class="number">200</span>:</span><br><span class="line">            logging.error(<span class="string">&quot;失败响应: &quot;</span>+ <span class="built_in">str</span>(response.status))</span><br><span class="line">            <span class="keyword">return</span> request</span><br><span class="line">        <span class="keyword">return</span> response</span><br></pre></td></tr></table></figure>
+
+<p>最后在 settings 配置文件中开启这些中间件。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">DOWNLOADER_MIDDLEWARES = &#123;</span><br><span class="line">   <span class="string">&#x27;ytaoCrawl.middlewares.RandomUserAgentMiddleware&#x27;</span>: <span class="number">500</span>,</span><br><span class="line">   <span class="string">&#x27;ytaoCrawl.middlewares.ProxyIPMiddleware&#x27;</span>: <span class="number">501</span>,</span><br><span class="line">   <span class="string">&#x27;ytaoCrawl.middlewares.YtaocrawlDownloaderMiddleware&#x27;</span>: <span class="number">543</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在为止，设置随机 User-Agent 和动态IP绕行已完成。</p>
+<h1 id="部署"><a href="#部署" class="headerlink" title="部署"></a>部署</h1><p>使用 scrapyd 部署爬虫项目，可以对爬虫进行远程管理，如启动，关闭，日志调用等等。<br>部署前，我们得先安装 scrapyd ，使用命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install scrapyd</span><br></pre></td></tr></table></figure>
+
+<p>安装成功后，可以看到该版本为 <code>1.2.1</code>。</p>
+<p><img src="https://images.ytao.top/scrapy-scrapyd.png"></p>
+<p>部署后，我们还需要一个客户端进行访问，这里就需要一个 scrapyd-client 客户端：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install scrapyd-client</span><br></pre></td></tr></table></figure>
+
+<p>修改 scrapy.cfg 文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[settings]</span><br><span class="line">default = ytaoCrawl.settings</span><br><span class="line"></span><br><span class="line">[deploy:localytao]</span><br><span class="line">url = http://localhost:6800/</span><br><span class="line">project = ytaoCrawl</span><br><span class="line"></span><br><span class="line"><span class="comment"># deploy 可批量部署</span></span><br></pre></td></tr></table></figure>
+
+<p>启动 scrapyd：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scrapyd</span><br></pre></td></tr></table></figure>
+
+<p>如果是 Windows，要先在<code>X:\xx\Scripts</code>下创建<code>scrapyd-deploy.bat</code>文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">@<span class="built_in">echo</span> off</span><br><span class="line"><span class="string">&quot;X:\xx\python.exe&quot;</span> <span class="string">&quot;X:\xx\Scripts\scrapyd-deploy&quot;</span> %1 %2</span><br></pre></td></tr></table></figure>
+
+<p>项目部署到 Scrapyd 服务上：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scrapyd-deploy localytao -p ytaoCrawl</span><br></pre></td></tr></table></figure>
+
+<p>远程启动<br>curl <a target="_blank" rel="noopener" href="http://localhost:6800/schedule.json">http://localhost:6800/schedule.json</a> -d project&#x3D;ytaoCrawl -d spider&#x3D;ytaoSpider</p>
+<p>执行启动后，可以在<code>http://localhost:6800/</code>中查看爬虫执行状态，以及日志</p>
+<p><img src="https://images.ytao.top/scrapy-scrapyd-page.png"></p>
+<p>除了启动可远程调用外，同时 Scrapyd 还提供了较丰富的 API：</p>
+<ul>
+<li>服务中爬虫状态查询 <code>curl http://localhost:6800/daemonstatus.json</code></li>
+<li>取消爬虫  <code>curl http://localhost:6800/cancel.json -d project=projectName -d job=jobId</code></li>
+<li>展示项目 <code>curl http://localhost:6800/listprojects.json</code></li>
+<li>删除项目 <code>curl http://localhost:6800/delproject.json -d project=projectName</code></li>
+<li>展示爬虫 <code>curl http://localhost:6800/listspiders.json?project=projectName</code></li>
+<li>获取项目所有版本号 <code>curl http://localhost:6800/listversions.json?project=projectName</code></li>
+<li>删除项目版本号 <code>curl http://localhost:6800/delversion.json -d project=projectName -d version=versionName</code></li>
+</ul>
+<p>更多详情 <a target="_blank" rel="noopener" href="https://scrapyd.readthedocs.io/en/stable/api.html">https://scrapyd.readthedocs.io/en/stable/api.html</a></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><blockquote>
+<p>本文篇幅有限，剖析过程中不能面面俱到，有些网站的反爬比较棘手的，只要我们一一分析，都能找到破解的办法，还有眼睛看到的数据并不一定是你拿到的数据，比如有些网站的html渲染都是动态的，就需要我们去处理好这些信息。当你走进crawler的世界，你就会发现，其实挺有意思的。最后，希望大家不要面向监狱爬虫，数据千万条，遵纪守法第一条。</p>
+</blockquote>
+
+      
+    </div>
+    
+    
+    
+
+    
+      <div>
+        <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="https://yangtao.ytao.top/ytao%E5%85%AC%E4%BC%97%E5%8F%B7.jpg" alt=" wechat" style="width: 200px; max-width: 100%;"/>
+    <div>我的公众号</div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>原创技术分享，感谢您的鼓励！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span><!-- Donate -->赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="https://yangtao.ytao.top/wechatpay.png" alt=" WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="https://yangtao.ytao.top/alipay.jpg" alt=" Alipay"/>
+        <p>Alipay</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Scrapy/" rel="tag"># Scrapy</a>
+          
+            <a href="/tags/%E7%88%AC%E8%99%AB/" rel="tag"># 爬虫</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/11/24/8_tomcat/" rel="next" title="初探Tomcat的架构设计">
+                <i class="fa fa-chevron-left"></i> 初探Tomcat的架构设计
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/12/09/10-netty/" rel="prev" title="Netty中粘包/拆包处理">
+                Netty中粘包/拆包处理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+          <div class="post-spread">
+            
+          </div>
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="https://yangtao.ytao.top/ytao-about_1.jpg"
+                alt="" />
+            
+              <p class="site-author-name" itemprop="name">
+               
+              <!-- 
+              <br>
+              杨&nbsp;滔 
+              -->
+              <br>
+              原创技术博客
+              </p>
+              <p class="site-description motion-element" itemprop="description">
+              路漫漫其修远兮，吾将上下而求索
+              <!-- 
+              
+              -->
+              </p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">29</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="/links/" target="_blank" title="Links">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Links</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-Scrapy-%E9%A1%B9%E7%9B%AE"><span class="nav-number">1.</span> <span class="nav-text">创建 Scrapy 项目</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-Spider"><span class="nav-number">2.</span> <span class="nav-text">创建 Spider</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BF%BB%E9%A1%B5%E7%88%AC%E5%8F%96"><span class="nav-number">3.</span> <span class="nav-text">翻页爬取</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E6%95%B0%E6%8D%AE"><span class="nav-number">4.</span> <span class="nav-text">获取数据</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%85%A5%E5%BA%93"><span class="nav-number">5.</span> <span class="nav-text">数据入库</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%8D%E7%88%AC%E6%9C%BA%E5%88%B6%E5%BA%94%E5%AF%B9"><span class="nav-number">6.</span> <span class="nav-text">反爬机制应对</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%97%E4%BD%93%E5%8A%A0%E5%AF%86"><span class="nav-number">6.1.</span> <span class="nav-text">字体加密</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AA%8C%E8%AF%81%E7%A0%81%E5%92%8C%E5%B0%81%E7%A6%81IP"><span class="nav-number">6.2.</span> <span class="nav-text">验证码和封禁IP</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2"><span class="nav-number">7.</span> <span class="nav-text">部署</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">8.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yang Tao</span>
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+<!-- 访问统计 -->
+
+    <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span id="busuanzi_container_site_pv">本站总访问量<span id="busuanzi_value_site_pv"></span>次</span>
+    <span class="post-meta-divider">|</span>
+    <span id="busuanzi_container_site_uv">本站访客数<span id="busuanzi_value_site_uv"></span>人</span>
+
+
+<!-- 备案号 -->
+<p>
+	<a class="beian" style="font-size:12px; color:gray; border-bottom: none;" href="https://beian.miit.gov.cn" target="_blank">
+    粤ICP备19117800号
+	</a>
+</p>
+
+
+<script src="https://my.openwrite.cn/js/readmore.js" type="text/javascript"></script>
+<script>
+    const btw = new BTWPlugin();
+    btw.init({
+        id: 'owContent',
+        blogId: '15390-1575515911767-844',
+        name: '『ytao』',
+        qrcode: 'http://yangtao.ytao.top/ytao%E5%85%AC%E4%BC%97%E5%8F%B7.jpg',
+        keyword: 'ytao',
+    });
+</script>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+          <span id="scrollpercent"><span>0</span>%</span>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+  <script type="text/javascript" src="/js/src/exturl.js?v=5.1.4"></script>
+
+
+</body>
+</html>
